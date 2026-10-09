@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employer Portal · SkillTrack</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="employer">
+<div class="app">
+  <aside class="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar"></header>
+
+    <main class="content">
+
+      <section class="card" id="companyHero" style="margin-bottom:16px"></section>
+
+      <section class="grid grid--4" id="employerStats" style="margin-bottom:16px"></section>
+
+      <div class="tabs" id="mainTabs">
+        <button class="tab tab--active" data-tab="verify">Verification requests <span class="nav__badge" style="margin-left:6px">3</span></button>
+        <button class="tab" data-tab="hires">Hires from the platform</button>
+        <button class="tab" data-tab="jobs">Job postings</button>
+        <button class="tab" data-tab="skills">Skill demand</button>
+        <button class="tab" data-tab="account">Company account</button>
+      </div>
+
+      <!-- ============ verification ============ -->
+      <section class="tabpanel" data-panel="verify">
+        <div class="banner banner--warning" style="margin-bottom:16px">
+          <span class="banner__ico">!</span>
+          <div><strong>Why this matters</strong>
+            Self-reported employment cannot be counted as an outcome until you confirm it.
+            Every confirmation here directly updates the state's placement statistics.</div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <div><h3>Employment verification requests</h3>
+              <div class="card__sub">Trainees who listed your company as their employer</div></div>
+            <button class="btn btn--sm" id="confirmAll">Confirm all pending</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl" id="verifyTable">
+              <thead><tr>
+                <th>Request</th><th>Trainee</th><th>Unique ID</th><th>Role claimed</th>
+                <th>Since</th><th class="num">Claimed salary</th><th>Status</th><th class="text-right">Action</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="card__foot">
+            <span>Disputed records go to the mission office validation queue for manual review within 5 working days.</span>
+          </div>
+        </div>
+
+        <div class="grid grid--2 mt-16">
+          <div class="card">
+            <div class="card__head"><div><h3>Report an exit or salary revision</h3>
+              <div class="card__sub">Keeps retention and wage-progression figures honest</div></div></div>
+            <div class="card__body">
+              <form class="stack" id="exitForm" style="gap:12px">
+                <div class="field"><label for="exTrainee">Trainee</label>
+                  <select class="select" id="exTrainee"></select></div>
+                <div class="grid grid--2">
+                  <div class="field"><label for="exType">Update type</label>
+                    <select class="select" id="exType">
+                      <option>Salary revision</option><option>Role change / promotion</option>
+                      <option>Resigned</option><option>Contract ended</option><option>Terminated</option>
+                    </select></div>
+                  <div class="field"><label for="exDate">Effective date</label>
+                    <input class="input" type="date" id="exDate" value="2026-09-17"></div>
+                </div>
+                <div class="field"><label for="exAmount">New monthly salary (if applicable)</label>
+                  <input class="input" id="exAmount" inputmode="numeric" placeholder="₹"></div>
+                <button class="btn btn--primary" type="submit">Submit update</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><div><h3>Bulk verification</h3>
+              <div class="card__sub">For HR teams with many records</div></div></div>
+            <div class="card__body stack">
+              <div class="banner">
+                <span class="banner__ico">⇪</span>
+                <div><strong>Upload a payroll extract</strong>
+                  CSV with employee name, joining date and monthly gross. We match it against
+                  pending claims and flag only the mismatches.</div>
+              </div>
+              <div class="row">
+                <button class="btn" data-demo="Sample CSV template downloaded.">⭳ Download template</button>
+                <button class="btn btn--primary" data-demo="412 rows matched · 9 mismatches flagged for review.">⇪ Upload CSV</button>
+              </div>
+              <h4 class="muted mt-12">Or connect your HRMS</h4>
+              <div class="row">
+                <button class="btn btn--sm" data-demo="EPFO cross-check enabled for this employer.">EPFO cross-check</button>
+                <button class="btn btn--sm" data-demo="API key issued. See Company account tab.">REST API</button>
+                <button class="btn btn--sm" data-demo="Webhook registered.">Webhook</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ hires ============ -->
+      <section class="tabpanel" data-panel="hires" hidden>
+        <div class="grid grid--2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card__head"><div><h3>Hires by course</h3>
+              <div class="card__sub">Where your talent came from</div></div></div>
+            <div class="card__body"><div class="js-chart" id="chartHireCourse"></div></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><div><h3>Retention of platform hires</h3>
+              <div class="card__sub">Still employed at each milestone</div></div></div>
+            <div class="card__body">
+              <div class="js-chart" id="chartRetention"></div>
+              <div id="retentionLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <div><h3>Your hires from SkillTrack</h3>
+              <div class="card__sub" id="hiresCount"></div></div>
+            <label class="topbar__search" style="min-width:200px">
+              <span class="muted">⌕</span>
+              <input type="search" id="hireSearch" placeholder="Name or ID…" aria-label="Search hires">
+            </label>
+            <button class="btn btn--sm" id="exportHires">⭳ CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl" id="hiresTable">
+              <thead><tr>
+                <th>Employee</th><th>Unique ID</th><th>Course</th><th>Provider</th>
+                <th class="num">Assessment</th><th class="num">Starting</th><th class="num">Current</th>
+                <th>Retention</th><th>Verified</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="card__foot" id="hiresPager"></div>
+        </div>
+      </section>
+
+      <!-- ============ jobs ============ -->
+      <section class="tabpanel" data-panel="jobs" hidden>
+        <div class="grid grid--2-1">
+          <div class="card">
+            <div class="card__head"><div><h3>Your openings</h3>
+              <div class="card__sub">Matched against certified trainees in your district</div></div></div>
+            <div id="jobList"></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><div><h3>Post an opening</h3>
+              <div class="card__sub">Skills you list here feed the state's skill-gap analysis</div></div></div>
+            <div class="card__body">
+              <form class="stack" id="jobForm" style="gap:12px">
+                <div class="field"><label for="jTitle">Role title</label>
+                  <input class="input" id="jTitle" placeholder="e.g. Junior Data Analyst" required></div>
+                <div class="grid grid--2">
+                  <div class="field"><label for="jOpen">Openings</label>
+                    <input class="input" id="jOpen" type="number" min="1" value="5"></div>
+                  <div class="field"><label for="jDistrict">District</label>
+                    <select class="select" id="jDistrict"></select></div>
+                </div>
+                <div class="field"><label for="jSkills">Required skills (comma separated)</label>
+                  <input class="input" id="jSkills" placeholder="SQL, Power BI, Excel"></div>
+                <div class="grid grid--2">
+                  <div class="field"><label for="jMin">Salary from (₹/month)</label>
+                    <input class="input" id="jMin" inputmode="numeric" value="18000"></div>
+                  <div class="field"><label for="jMax">Salary to (₹/month)</label>
+                    <input class="input" id="jMax" inputmode="numeric" value="24000"></div>
+                </div>
+                <button class="btn btn--primary" type="submit">Publish opening</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ skills ============ -->
+      <section class="tabpanel" data-panel="skills" hidden>
+        <div class="grid grid--2">
+          <div class="card">
+            <div class="card__head"><div><h3>Tell us what you actually need</h3>
+              <div class="card__sub">This is the industry side of every skill-gap chart in the system</div></div></div>
+            <div class="card__body">
+              <form class="stack" id="demandForm" style="gap:14px">
+                <div class="field"><label for="dCourse">Related course</label>
+                  <select class="select" id="dCourse"></select></div>
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-secondary)">Skills you require</label>
+                  <div class="row row--tight mt-12" id="skillChoices"></div>
+                </div>
+                <div class="field"><label for="dOther">Other skills not listed</label>
+                  <input class="input" id="dOther" placeholder="e.g. Kubernetes, GD&T, spoken English"></div>
+                <div class="field"><label for="dGap">What are new hires weakest at?</label>
+                  <textarea class="input" id="dGap" rows="3" placeholder="Free text — read by the curriculum review committee"></textarea></div>
+                <button class="btn btn--primary" type="submit">Submit skill demand</button>
+              </form>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__head"><div><h3>Gap for your sector</h3>
+              <div class="card__sub">Industry requirement vs what providers currently teach</div></div></div>
+            <div class="card__body">
+              <div class="js-chart" id="chartSectorGap"></div>
+              <div id="sectorGapNote" class="mt-16"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ account ============ -->
+      <section class="tabpanel" data-panel="account" hidden>
+        <div class="grid grid--2">
+          <div class="card">
+            <div class="card__head"><div><h3>Company profile</h3>
+              <div class="card__sub">Verified against GSTIN and MCA records</div></div></div>
+            <div class="card__body"><dl class="kv" id="companyKV"></dl></div>
+            <div class="card__foot">
+              <button class="btn btn--sm" data-demo="Profile edit request sent to the mission office.">Request a change</button>
+              <button class="btn btn--sm" data-demo="Re-verification triggered against the GST API.">Re-verify GSTIN</button>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card">
+              <div class="card__head"><div><h3>Portal users</h3>
+                <div class="card__sub">Who from your company can confirm outcomes</div></div></div>
+              <div id="portalUsers"></div>
+              <div class="card__foot">
+                <button class="btn btn--sm btn--primary" data-demo="Invite sent.">+ Invite a colleague</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card__head"><div><h3>API access</h3>
+                <div class="card__sub">Push hires and exits automatically from your HRMS</div></div></div>
+              <div class="card__body stack" id="apiBox"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/employer.js"></script>
+</body>
+</html>

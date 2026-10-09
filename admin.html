@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Console · SkillTrack</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="admin">
+<div class="app">
+  <aside class="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar"></header>
+
+    <main class="content">
+
+      <section class="card" id="adminHero" style="margin-bottom:16px"></section>
+
+      <section class="grid grid--4" id="adminStats" style="margin-bottom:16px"></section>
+
+      <div class="tabs" id="mainTabs">
+        <button class="tab tab--active" data-tab="followups">Follow-up engine</button>
+        <button class="tab" data-tab="validation">Data validation <span class="nav__badge" style="margin-left:6px">7</span></button>
+        <button class="tab" data-tab="providers">Providers</button>
+        <button class="tab" data-tab="profile">My profile & access</button>
+        <button class="tab" data-tab="system">System & audit</button>
+      </div>
+
+      <!-- ============ follow-up engine ============ -->
+      <section class="tabpanel" data-panel="followups" id="followups">
+        <div class="grid grid--2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card__head"><div><h3>Response rate by channel</h3>
+              <div class="card__sub">Which follow-up channel actually reaches people</div></div></div>
+            <div class="card__body"><div class="js-chart" id="chartChannel"></div></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><div><h3>Response decay by wave</h3>
+              <div class="card__sub">The longitudinal tracking problem in one chart</div></div></div>
+            <div class="card__body">
+              <div class="js-chart" id="chartDecay"></div>
+              <div id="decayLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card__head">
+            <div><h3>Campaigns</h3>
+              <div class="card__sub">Automated waves at 3 months, 6 months, 1 year and 2 years</div></div>
+            <button class="btn btn--sm btn--primary" id="newCampaign">+ New campaign</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl" id="campaignTable">
+              <thead><tr>
+                <th>Campaign</th><th>Channel</th><th class="num">Audience</th><th class="num">Responded</th>
+                <th class="num">Response rate</th><th>Started</th><th>Status</th><th class="text-right">Action</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid grid--1-2">
+          <div class="card">
+            <div class="card__head"><div><h3>Launch a follow-up wave</h3>
+              <div class="card__sub">Targets only trainees with active consent</div></div></div>
+            <div class="card__body">
+              <form class="stack" id="campaignForm" style="gap:12px">
+                <div class="field"><label for="cBatch">Cohort</label>
+                  <select class="select" id="cBatch"></select></div>
+                <div class="field"><label for="cWave">Wave</label>
+                  <select class="select" id="cWave">
+                    <option>3-month check</option><option>6-month check</option>
+                    <option>12-month retention</option><option>24-month livelihood</option>
+                  </select></div>
+                <div class="field"><label for="cChannel">Channel</label>
+                  <select class="select" id="cChannel">
+                    <option>SMS + WhatsApp</option><option>App push</option>
+                    <option>IVR call</option><option>Assisted call (non-respondents)</option><option>Email</option>
+                  </select></div>
+                <div class="field"><label>Audience</label>
+                  <div class="banner" id="audiencePreview"></div></div>
+                <button class="btn btn--primary" type="submit">Launch campaign</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div><h3>Non-respondent queue</h3>
+                <div class="card__sub">Escalated to assisted calling after 3 failed automated attempts</div></div>
+              <button class="btn btn--sm" id="exportNonResp">⭳ CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table class="tbl" id="nonRespTable">
+                <thead><tr>
+                  <th>Trainee</th><th>Unique ID</th><th>District</th><th>Wave</th>
+                  <th>Contact status</th><th class="text-right">Action</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="card__foot" id="nonRespFoot"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ validation ============ -->
+      <section class="tabpanel" data-panel="validation" id="validation" hidden>
+        <div class="grid grid--3" style="margin-bottom:16px" id="validationStats"></div>
+
+        <div class="grid grid--2-1">
+          <div class="card">
+            <div class="card__head">
+              <div><h3>Flags awaiting manual review</h3>
+                <div class="card__sub">Raised by the rule engine, cross-checks and anomaly detection</div></div>
+              <select class="select" id="sevFilter" style="width:auto">
+                <option value="all">All severities</option>
+                <option value="critical">Critical</option>
+                <option value="serious">Serious</option>
+                <option value="warning">Warning</option>
+              </select>
+            </div>
+            <div id="flagList"></div>
+            <div class="card__foot" id="flagFoot"></div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card__head"><div><h3>Verification sources</h3>
+                <div class="card__sub">Official APIs cross-checked nightly</div></div></div>
+              <div id="sourceList"></div>
+            </div>
+            <div class="card">
+              <div class="card__head"><div><h3>Validation rules</h3>
+                <div class="card__sub">Toggle what gets auto-flagged</div></div></div>
+              <div class="card__body stack" id="ruleList" style="gap:12px"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ providers ============ -->
+      <section class="tabpanel" data-panel="providers" id="providers" hidden>
+        <div class="grid grid--2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card__head"><div><h3>Provider accountability</h3>
+              <div class="card__sub">Placement rate vs. state average</div></div></div>
+            <div class="card__body"><div class="js-chart" id="chartProviderPlace"></div></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><div><h3>Cost per successful outcome</h3>
+              <div class="card__sub">Programme spend ÷ trainees placed — where the money works hardest</div></div></div>
+            <div class="card__body"><div class="js-chart" id="chartCost"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <div><h3>Registered training providers</h3>
+              <div class="card__sub">Accreditation status, volume and outcomes</div></div>
+            <button class="btn btn--sm" id="exportProviders">⭳ CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl" id="providerTable">
+              <thead><tr>
+                <th>Provider</th><th>Base</th><th class="num">Centres</th><th class="num">Trainees</th>
+                <th class="num">Certified</th><th class="num">Placement</th><th class="num">Avg salary</th>
+                <th class="num">Retention</th><th>Accreditation</th><th class="text-right">Action</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="card__foot">
+            <span>Providers below 55% placement for two consecutive batches are auto-flagged for review.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ profile ============ -->
+      <section class="tabpanel" data-panel="profile" hidden>
+        <div class="grid grid--2">
+          <div class="stack">
+            <div class="card">
+              <div class="card__head"><div><h3>Administrator profile</h3>
+                <div class="card__sub">Identity used on every audit-log entry</div></div></div>
+              <div class="card__body"><dl class="kv" id="adminKV"></dl></div>
+              <div class="card__foot">
+                <button class="btn btn--sm" data-demo="Profile change request sent to the state IT cell.">Request a change</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card__head"><div><h3>Security</h3></div></div>
+              <div class="card__body stack" id="securityBox" style="gap:14px"></div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card__head"><div><h3>Permissions</h3>
+                <div class="card__sub">Role-based access — least privilege by default</div></div></div>
+              <div id="permList"></div>
+              <div class="card__foot">
+                <span>Raw microdata export is deliberately disabled for programme administrators.</span>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card__head"><div><h3>Active sessions</h3></div></div>
+              <div id="sessionList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ system ============ -->
+      <section class="tabpanel" data-panel="system" hidden>
+        <div class="grid grid--2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card__head"><div><h3>Platform users</h3>
+              <div class="card__sub">Who can see what, across all roles</div></div></div>
+            <div id="userList"></div>
+            <div class="card__foot">
+              <button class="btn btn--sm btn--primary" data-demo="Invitation sent.">+ Add user</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__head"><div><h3>Data retention & privacy</h3>
+              <div class="card__sub">DPDP Act 2023 obligations</div></div></div>
+            <div class="card__body stack" id="retentionBox" style="gap:14px"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <div><h3>Audit log</h3>
+              <div class="card__sub">Every read and write against personal data is recorded</div></div>
+            <button class="btn btn--sm" id="exportAudit">⭳ CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl" id="auditTable">
+              <thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Target</th><th>IP</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>

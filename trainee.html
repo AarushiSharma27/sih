@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainee Profile · SkillTrack</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="trainee">
+<div class="app">
+  <aside class="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar"></header>
+
+    <main class="content">
+
+      <!-- profile hero -->
+      <section class="card" id="profileHero" style="margin-bottom:16px"></section>
+
+      <!-- pending survey -->
+      <section id="surveyMount" style="margin-bottom:16px"></section>
+
+      <section class="grid grid--4" id="traineeStats" style="margin-bottom:16px"></section>
+
+      <div class="grid grid--2-1">
+        <!-- ============ main column ============ -->
+        <div class="stack">
+
+          <div class="card">
+            <div class="card__head">
+              <div><h3>Training-to-livelihood journey</h3>
+                <div class="card__sub">Every stage is timestamped and linked to the unique ID</div></div>
+              <span class="chip chip--brand" id="journeyProgress"></span>
+            </div>
+            <div class="card__body"><div class="timeline" id="journey"></div></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div><h3>Employment record</h3>
+                <div class="card__sub">Verified against the employer portal</div></div>
+              <span id="verifyChip"></span>
+            </div>
+            <div class="card__body">
+              <div class="grid grid--2">
+                <dl class="kv" id="employmentKV"></dl>
+                <div>
+                  <h4 class="muted" style="margin-bottom:8px">Wage progression</h4>
+                  <div class="js-chart" id="chartWage"></div>
+                  <div id="wageLegend"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card__foot" id="employmentFoot"></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div><h3>Skills vs industry requirement</h3>
+                <div class="card__sub">Your course against what employers are currently asking for</div></div>
+            </div>
+            <div class="card__body">
+              <div class="grid grid--2">
+                <div id="skillMeters"></div>
+                <div>
+                  <h4 class="muted" style="margin-bottom:8px">Gap skills employers ask for</h4>
+                  <div class="row row--tight" id="gapTags"></div>
+                  <h4 class="muted" style="margin:16px 0 8px">Recommended next courses</h4>
+                  <div class="stack" id="recommended" style="gap:8px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ============ side column ============ -->
+        <div class="stack">
+
+          <div class="card">
+            <div class="card__head"><div><h3>Consent & privacy</h3>
+              <div class="card__sub">You control what is tracked. Revocable at any time.</div></div></div>
+            <div class="card__body stack" id="consentBox" style="gap:14px"></div>
+            <div class="card__foot">
+              <span>Consent ID CNS-2025-03102 · granted 12 Jan 2025 · valid 24 months</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><div><h3>Contact details</h3>
+              <div class="card__sub">Keeping these current is why follow-ups reach you</div></div></div>
+            <div class="card__body"><form class="stack" id="contactForm" style="gap:12px"></form></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><div><h3>Follow-up schedule</h3>
+              <div class="card__sub">3 months · 6 months · 1 year · 2 years</div></div></div>
+            <div id="followList"></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><div><h3>Notifications</h3></div></div>
+            <div id="notifications"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/trainee.js"></script>
+</body>
+</html>

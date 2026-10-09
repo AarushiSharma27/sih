@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports — SkillTrack</title>
+<meta name="description" content="Generate course, provider, district, cohort, employment, skill-gap and retention reports.">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="reports">
+
+<div class="app">
+  <aside class="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar"></header>
+
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-head__text">
+          <h2>Reports</h2>
+          <p class="muted">
+            Build a report from the live cohort, preview it, then export. Every report is
+            aggregate by default — microdata export is a separate permission, and is
+            withheld from this account.
+          </p>
+        </div>
+        <div class="page-head__actions">
+          <button class="btn btn--sm" id="resetFilters">Reset filters</button>
+        </div>
+      </div>
+
+      <!-- ---------- 1. pick a report ---------- -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h3>1 · Choose a report</h3>
+            <div class="card__sub">Each one answers a different question</div>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="choice-grid" id="reportChoices"></div>
+        </div>
+      </div>
+
+      <!-- ---------- 2. scope ---------- -->
+      <div class="card mt-12">
+        <div class="card__head">
+          <div>
+            <h3>2 · Set the scope</h3>
+            <div class="card__sub" id="scopeSub">Filters apply to every figure in the report</div>
+          </div>
+        </div>
+        <div class="filterbar" id="reportFilters">
+          <div class="field">
+            <label for="fCourse">Course</label>
+            <select class="select" id="fCourse"><option value="all">All courses</option></select>
+          </div>
+          <div class="field">
+            <label for="fDistrict">District</label>
+            <select class="select" id="fDistrict"><option value="all">All districts</option></select>
+          </div>
+          <div class="field">
+            <label for="fProvider">Provider</label>
+            <select class="select" id="fProvider"><option value="all">All providers</option></select>
+          </div>
+          <div class="field">
+            <label for="fBatch">Cohort</label>
+            <select class="select" id="fBatch"><option value="all">All cohorts</option></select>
+          </div>
+          <div class="field">
+            <label for="fGender">Gender</label>
+            <select class="select" id="fGender">
+              <option value="all">All</option>
+              <option value="F">Female</option>
+              <option value="M">Male</option>
+              <option value="O">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="card__foot">
+          <span class="small muted" id="scopeCount">—</span>
+          <span class="topbar__spacer"></span>
+          <button class="btn btn--primary" id="generateBtn">Generate report</button>
+        </div>
+      </div>
+
+      <!-- ---------- 3. output ---------- -->
+      <div class="card mt-12" id="outputCard">
+        <div class="card__head">
+          <div>
+            <h3 id="reportTitle">Report preview</h3>
+            <div class="card__sub" id="reportMeta">Choose a report and generate it</div>
+          </div>
+          <div class="page-head__actions" id="exportActions" hidden>
+            <button class="btn btn--sm" id="exportPdf">Export PDF</button>
+            <button class="btn btn--sm" id="exportCsv">Export CSV</button>
+          </div>
+        </div>
+        <div id="reportBody">
+          <div class="empty">
+            <div class="empty__ico">▤</div>
+            <div class="empty__title">No report generated yet</div>
+            <div class="empty__body">
+              Pick a report type above, set the scope, then generate. The preview shows
+              exactly what will be exported.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- scheduled / recent ---------- -->
+      <div class="grid grid--2 mt-12">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <h3>Recently generated</h3>
+              <div class="card__sub">This session</div>
+            </div>
+          </div>
+          <div id="recentList">
+            <div class="empty">
+              <div class="empty__ico">◷</div>
+              <div class="empty__title">Nothing yet</div>
+              <div class="empty__body">Reports you generate appear here for quick re-export.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <h3>Scheduled reports</h3>
+              <div class="card__sub">Generated automatically and emailed</div>
+            </div>
+          </div>
+          <div id="scheduledList"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/reports.js"></script>
+</body>
+</html>

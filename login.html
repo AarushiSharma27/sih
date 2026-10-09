@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — SkillTrack</title>
+<meta name="description" content="Role-based sign-in for trainees, training providers, employers and administrators.">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="login">
+
+<div class="landing">
+
+  <header class="landing__nav">
+    <a class="sidebar__mark" href="index.html" style="text-decoration:none">ST</a>
+    <div>
+      <div style="font-weight:680">SkillTrack</div>
+      <div class="small muted">Madhya Pradesh State Skill Development Mission</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <a class="btn btn--sm" href="register.html">Register</a>
+    <button class="btn btn--sm" id="themeBtn" title="Light / dark / system">◐</button>
+  </header>
+
+  <section class="shell-narrow" style="padding:38px 28px 56px">
+
+    <div style="text-align:center;margin-bottom:26px">
+      <span class="chip chip--brand">Secure sign-in</span>
+      <h1 style="font-size:30px;margin:12px 0 8px">Sign in to SkillTrack</h1>
+      <p class="muted" style="max-width:520px;margin:0 auto;font-size:14px;line-height:1.6">
+        Choose your role. What you can see and change is decided by that role — nobody
+        gets access to personal data they do not need to do their job.
+      </p>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h3>1 · Who are you signing in as?</h3>
+            <div class="card__sub">Each role opens a different workspace</div>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="choice-grid" id="roleChoices"></div>
+        </div>
+      </div>
+
+      <div class="card mt-12">
+        <div class="card__head">
+          <div>
+            <h3>2 · Your credentials</h3>
+            <div class="card__sub" id="credHint">Select a role to continue</div>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="form-grid">
+            <div class="field">
+              <label for="userId" id="userIdLabel">Registered ID or email</label>
+              <input class="input" type="text" id="userId" autocomplete="username"
+                     placeholder="Select a role first" disabled>
+              <span class="hint" id="userIdHint">Trainees sign in with the ID issued at registration.</span>
+              <span class="field__err" id="userIdErr" hidden></span>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input class="input" type="password" id="password" autocomplete="current-password"
+                     placeholder="••••••••" disabled>
+              <span class="hint">Any value works in this demo build.</span>
+              <span class="field__err" id="passwordErr" hidden></span>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:12px">
+            <label class="check" style="font-size:12.5px">
+              <input type="checkbox" id="remember">
+              <span>Keep me signed in on this device</span>
+            </label>
+            <a class="small" href="#" data-demo="A reset link would be sent to the registered mobile number.">
+              Forgotten your password?
+            </a>
+          </div>
+
+          <div class="banner banner--critical mt-12" id="loginError" hidden>
+            <span class="banner__ico">!</span>
+            <div><strong>Could not sign you in</strong><span id="loginErrorText"></span></div>
+          </div>
+        </div>
+        <div class="card__foot">
+          <span class="small muted">🔒 Sessions are logged. Administrator sign-in also requires MFA.</span>
+          <span class="topbar__spacer"></span>
+          <button class="btn btn--primary" type="submit" id="submitBtn" disabled>Sign in</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="card mt-12">
+      <div class="card__body">
+        <div class="row" style="gap:12px;align-items:flex-start">
+          <span style="font-size:17px">🔒</span>
+          <div class="small" style="line-height:1.6">
+            <strong>Your data is protected and used only for authorised outcome tracking.</strong>
+            Access is role-based and least-privilege: an employer sees only the people they
+            hired, a provider only their own batches, and personal contact details never
+            appear on any dashboard. Every access is written to an audit log you can request.
+            <a href="trainee.html#privacy">Read the privacy notice →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="small muted" style="text-align:center;margin-top:22px">
+      New trainee? <a href="register.html">Register and get your SkillTrack ID →</a>
+    </p>
+  </section>
+
+  <footer class="landing__foot">
+    <span>SkillTrack · demo build with synthetic data — no real personal information.</span>
+    <span class="topbar__spacer"></span>
+    <span>Consent-first · DPDP Act 2023 aligned</span>
+  </footer>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/login.js"></script>
+</body>
+</html>

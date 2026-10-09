@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Update your outcome — SkillTrack</title>
+<meta name="description" content="Tell SkillTrack what you are doing after your training: employed, self-employed, in an apprenticeship, or still looking.">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="outcome">
+
+<div class="app">
+  <aside class="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar"></header>
+
+    <div class="content">
+      <div class="shell-narrow">
+
+        <div class="page-head">
+          <div class="page-head__text">
+            <h2>What are you doing after your training?</h2>
+            <p class="muted">
+              This is the question the whole system exists to answer. It takes a minute,
+              and it is what turns a certificate into evidence about whether the course worked.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" id="contextCard">
+          <div class="card__body">
+            <div class="row" style="gap:14px;align-items:center;flex-wrap:wrap">
+              <span id="ctxAvatar"></span>
+              <div style="min-width:0">
+                <div style="font-weight:660" id="ctxName">—</div>
+                <div class="small muted" id="ctxMeta">—</div>
+              </div>
+              <span class="topbar__spacer"></span>
+              <span class="chip chip--good" id="ctxCert">✓ Certified</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="outcomeForm" novalidate>
+
+          <!-- ---------- the branching question ---------- -->
+          <section class="card mt-12">
+            <div class="card__head">
+              <div>
+                <h3>Your current situation</h3>
+                <div class="card__sub">Choose the one that fits best today</div>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="choice-grid" id="outcomeChoices"></div>
+              <span class="field__err mt-12" id="outcomeErr" hidden style="display:block"></span>
+            </div>
+          </section>
+
+          <!-- ---------- EMPLOYED ---------- -->
+          <section class="card mt-12" data-branch="employed" hidden>
+            <div class="card__head">
+              <div>
+                <h3>💼 About your job</h3>
+                <div class="card__sub">Your employer will be asked to confirm this</div>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="emp_company">Company name</label>
+                  <input class="input" type="text" id="emp_company" list="employerList" placeholder="Start typing…">
+                  <datalist id="employerList"></datalist>
+                  <span class="hint">Registered employers are verified automatically.</span>
+                  <span class="field__err" id="emp_companyErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_role">Job role</label>
+                  <input class="input" type="text" id="emp_role" placeholder="e.g. Junior Data Analyst">
+                  <span class="field__err" id="emp_roleErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_industry">Industry</label>
+                  <select class="select" id="emp_industry"><option value="">Select…</option></select>
+                  <span class="field__err" id="emp_industryErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_location">Work location</label>
+                  <input class="input" type="text" id="emp_location" placeholder="City or district">
+                  <span class="field__err" id="emp_locationErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_joined">Joining date</label>
+                  <input class="input" type="date" id="emp_joined">
+                  <span class="field__err" id="emp_joinedErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_salary">Monthly salary (₹)</label>
+                  <input class="input" type="number" id="emp_salary" min="0" step="500" placeholder="22000" inputmode="numeric">
+                  <span class="hint">Take-home, per month. Never shown on any public dashboard.</span>
+                  <span class="field__err" id="emp_salaryErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_type">Employment type</label>
+                  <select class="select" id="emp_type">
+                    <option value="">Select…</option>
+                    <option>Full-time, permanent</option>
+                    <option>Full-time, contract</option>
+                    <option>Part-time</option>
+                    <option>Daily wage / casual</option>
+                    <option>Gig / platform work</option>
+                  </select>
+                  <span class="field__err" id="emp_typeErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="emp_relevance">How relevant was your training?</label>
+                  <select class="select" id="emp_relevance">
+                    <option value="">Select…</option>
+                    <option value="5">Highly relevant — I use it daily</option>
+                    <option value="4">Relevant — I use much of it</option>
+                    <option value="3">Somewhat relevant</option>
+                    <option value="2">Barely relevant</option>
+                    <option value="1">Not relevant at all</option>
+                  </select>
+                  <span class="field__err" id="emp_relevanceErr" hidden></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- SELF-EMPLOYED ---------- -->
+          <section class="card mt-12" data-branch="self" hidden>
+            <div class="card__head">
+              <div>
+                <h3>🚀 About your business</h3>
+                <div class="card__sub">Self-employment counts as a successful outcome — it is measured, not assumed</div>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="self_type">Type of work</label>
+                  <select class="select" id="self_type">
+                    <option value="">Select…</option>
+                    <option>Own shop or premises</option>
+                    <option>Home-based business</option>
+                    <option>Freelance / contract work</option>
+                    <option>Mobile or door-to-door service</option>
+                    <option>Online / e-commerce</option>
+                    <option>Farming or allied activity</option>
+                  </select>
+                  <span class="field__err" id="self_typeErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="self_name">Business name <span class="muted">(optional)</span></label>
+                  <input class="input" type="text" id="self_name" placeholder="If you trade under a name">
+                </div>
+                <div class="field">
+                  <label for="self_location">Location</label>
+                  <input class="input" type="text" id="self_location" placeholder="Where you operate">
+                  <span class="field__err" id="self_locationErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="self_started">Start date</label>
+                  <input class="input" type="date" id="self_started">
+                  <span class="field__err" id="self_startedErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="self_income">Monthly income range</label>
+                  <select class="select" id="self_income">
+                    <option value="">Select…</option>
+                    <option>Under ₹5,000</option>
+                    <option>₹5,000 – ₹10,000</option>
+                    <option>₹10,000 – ₹15,000</option>
+                    <option>₹15,000 – ₹25,000</option>
+                    <option>₹25,000 – ₹40,000</option>
+                    <option>Over ₹40,000</option>
+                    <option>It varies too much to say</option>
+                  </select>
+                  <span class="hint">A range is fine — an honest range beats a precise guess.</span>
+                  <span class="field__err" id="self_incomeErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="self_employees">People you employ</label>
+                  <select class="select" id="self_employees">
+                    <option value="">Select…</option>
+                    <option>Just me</option>
+                    <option>1–2</option>
+                    <option>3–5</option>
+                    <option>6–10</option>
+                    <option>More than 10</option>
+                  </select>
+                  <span class="hint">Trainees who go on to employ others are a separate success story.</span>
+                  <span class="field__err" id="self_employeesErr" hidden></span>
+                </div>
+                <div class="field span-all">
+                  <label>Skills from your training that you actually use</label>
+                  <div class="row" style="flex-wrap:wrap;gap:7px" id="self_skills"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- APPRENTICESHIP ---------- -->
+          <section class="card mt-12" data-branch="apprentice" hidden>
+            <div class="card__head">
+              <div>
+                <h3>🎓 About your apprenticeship</h3>
+                <div class="card__sub">We will check back when it ends to see whether it converted</div>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="app_org">Organisation</label>
+                  <input class="input" type="text" id="app_org" list="employerList2" placeholder="Where you are apprenticing">
+                  <datalist id="employerList2"></datalist>
+                  <span class="field__err" id="app_orgErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="app_role">Role</label>
+                  <input class="input" type="text" id="app_role" placeholder="e.g. Apprentice — Networking">
+                  <span class="field__err" id="app_roleErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="app_started">Start date</label>
+                  <input class="input" type="date" id="app_started">
+                  <span class="field__err" id="app_startedErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="app_duration">Duration</label>
+                  <select class="select" id="app_duration">
+                    <option value="">Select…</option>
+                    <option>3 months</option><option>6 months</option>
+                    <option>12 months</option><option>18 months</option>
+                    <option>24 months</option>
+                  </select>
+                  <span class="field__err" id="app_durationErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="app_stipend">Monthly stipend (₹)</label>
+                  <input class="input" type="number" id="app_stipend" min="0" step="500" placeholder="12000" inputmode="numeric">
+                  <span class="field__err" id="app_stipendErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="app_convert">Is there a job at the end?</label>
+                  <select class="select" id="app_convert">
+                    <option value="">Select…</option>
+                    <option>Yes — confirmed</option>
+                    <option>Likely, but not confirmed</option>
+                    <option>No</option>
+                    <option>I do not know yet</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- NOT PLACED ---------- -->
+          <section class="card mt-12" data-branch="notplaced" hidden>
+            <div class="card__head">
+              <div>
+                <h3>❌ Still looking</h3>
+                <div class="card__sub">
+                  Saying so is useful. It is the only way the programme learns what to fix.
+                </div>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="field">
+                <label for="np_reason">What is the main reason you have not found work?</label>
+                <select class="select" id="np_reason">
+                  <option value="">Select…</option>
+                  <option value="SKILL">Lack of technical skills</option>
+                  <option value="EXP">Lack of experience</option>
+                  <option value="INTV">Interview difficulties</option>
+                  <option value="NOJOB">No suitable jobs nearby</option>
+                  <option value="SALARY">Salary expectations not met</option>
+                  <option value="PERSONAL">Personal reasons</option>
+                  <option value="RELOC">Relocation issues</option>
+                  <option value="RELEV">Training was not relevant</option>
+                  <option value="OTHER">Other</option>
+                </select>
+                <span class="field__err" id="np_reasonErr" hidden></span>
+              </div>
+
+              <div class="field mt-12" id="np_otherWrap" hidden>
+                <label for="np_other">Tell us more</label>
+                <input class="input" type="text" id="np_other" placeholder="In your own words">
+              </div>
+
+              <div class="form-grid mt-12">
+                <div class="field">
+                  <label for="np_looking">How long have you been looking?</label>
+                  <select class="select" id="np_looking">
+                    <option value="">Select…</option>
+                    <option>Under 1 month</option><option>1–3 months</option>
+                    <option>3–6 months</option><option>Over 6 months</option>
+                  </select>
+                  <span class="field__err" id="np_lookingErr" hidden></span>
+                </div>
+                <div class="field">
+                  <label for="np_help">What would help most?</label>
+                  <select class="select" id="np_help">
+                    <option value="">Select…</option>
+                    <option>Additional technical training</option>
+                    <option>Interview and communication coaching</option>
+                    <option>An apprenticeship or internship placement</option>
+                    <option>Help finding jobs near me</option>
+                    <option>Relocation or travel support</option>
+                    <option>Tools or capital to start on my own</option>
+                  </select>
+                  <span class="field__err" id="np_helpErr" hidden></span>
+                </div>
+              </div>
+
+              <div class="banner mt-12" id="np_gapBanner" hidden>
+                <span class="banner__ico">◫</span>
+                <div>
+                  <strong>Skills employers ask for that your course did not cover</strong>
+                  <div class="row mt-12" style="flex-wrap:wrap;gap:6px" id="np_gapTags"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- submit ---------- -->
+          <div class="card mt-12" id="submitCard" hidden>
+            <div class="card__body">
+              <div class="banner" style="margin-bottom:14px">
+                <span class="banner__ico">🔒</span>
+                <div>
+                  <strong>What happens to this</strong>
+                  <span id="privacyNote">
+                    Your answer updates your record and feeds the programme's aggregate
+                    statistics. Your salary and contact details are never shown publicly.
+                  </span>
+                </div>
+              </div>
+              <div class="row" style="justify-content:flex-end;flex-wrap:wrap;gap:12px">
+                <a class="btn" href="trainee.html">Cancel</a>
+                <button class="btn btn--primary" type="submit" id="submitOutcome">Submit update</button>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- ---------- confirmation ---------- -->
+        <section class="card mt-12" id="outcomeDone" hidden>
+          <div class="card__body" style="text-align:center;padding:30px 24px">
+            <div style="font-size:30px">✓</div>
+            <h2 style="margin:10px 0 6px;font-size:21px">Thank you — your record is updated</h2>
+            <p class="muted" style="margin:0 auto 18px;max-width:460px;font-size:13.5px;line-height:1.6"
+               id="doneMessage"></p>
+            <div class="row" style="justify-content:center;flex-wrap:wrap">
+              <a class="btn btn--primary" href="trainee.html">Back to my profile →</a>
+              <a class="btn" href="notifications.html">See my follow-up schedule</a>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/outcome.js"></script>
+</body>
+</html>

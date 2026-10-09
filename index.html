@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillTrack — Longitudinal Skilling Outcomes & Impact Measurement System</title>
+<meta name="description" content="A consent-based, integrated platform that tracks trainees from training to long-term livelihood outcomes.">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body data-page="home">
+
+<div class="landing">
+
+  <header class="landing__nav">
+    <span class="sidebar__mark">ST</span>
+    <div>
+      <div style="font-weight:680">SkillTrack</div>
+      <div class="small muted">Madhya Pradesh State Skill Development Mission</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <a class="btn btn--sm" href="dashboard.html">Dashboard</a>
+    <a class="btn btn--sm" href="login.html">Login</a>
+    <button class="btn btn--sm" id="themeBtn" title="Light / dark / system">◐</button>
+  </header>
+
+  <section class="landing__hero">
+    <span class="chip chip--brand">Problem statement · Longitudinal outcome tracking</span>
+    <h1 class="mt-12">Skilling systems stop measuring at certification.<br>This one keeps measuring for two years.</h1>
+    <p>
+      A consent-based, integrated and data-driven platform that follows every trainee from
+      enrolment through employment, self-employment, wage progression and job retention —
+      so providers, programmes and public money can finally be judged on outcomes.
+    </p>
+    <div class="pill-flow">
+      <span>Train</span><i>→</i><span>Track</span><i>→</i><span>Measure</span><i>→</i>
+      <span>Understand</span><i>→</i><span>Improve</span>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:26px;flex-wrap:wrap">
+      <a class="btn btn--primary" href="register.html">Register as trainee</a>
+      <a class="btn" href="login.html">Login</a>
+      <a class="btn" href="dashboard.html">Open live dashboard</a>
+    </div>
+    <p class="small muted" style="margin-top:14px">
+      Or <a href="trainee.html">look at a trainee record</a> to see what two years of tracking looks like.
+    </p>
+  </section>
+
+  <section class="grid grid--4" id="heroStats"
+           style="max-width:1180px;margin:0 auto 34px;padding:0 28px;width:100%"></section>
+
+  <section style="max-width:1180px;margin:0 auto 34px;padding:0 28px;width:100%">
+    <div class="grid grid--3">
+      <div class="card">
+        <div class="card__body">
+          <div class="role-card__ico" style="background:var(--info-soft);width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px">↻</div>
+          <h3 style="margin:12px 0 6px;font-size:15px">Longitudinal outcome tracking</h3>
+          <p class="small muted" style="margin:0;line-height:1.6">
+            Not a snapshot at certification. Every trainee is followed at 3, 6, 12 and 24
+            months — through employment, wage progression, job changes and retention.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__body">
+          <div class="role-card__ico" style="background:var(--good-soft);width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px">🔒</div>
+          <h3 style="margin:12px 0 6px;font-size:15px">Consent-based &amp; privacy-conscious</h3>
+          <p class="small muted" style="margin:0;line-height:1.6">
+            Nothing is tracked without explicit, withdrawable consent. Dashboards show
+            aggregates only — names, numbers and salaries never appear in public views.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__body">
+          <div class="role-card__ico" style="background:var(--warning-soft);width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px">◫</div>
+          <h3 style="margin:12px 0 6px;font-size:15px">Data-driven skill-gap analysis</h3>
+          <p class="small muted" style="margin:0;line-height:1.6">
+            What employers ask for, set against what the curriculum taught — so courses get
+            fixed on evidence rather than on the last complaint anyone happened to hear.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="role-grid">
+    <a class="role-card" href="dashboard.html">
+      <div class="role-card__ico" style="background:var(--info-soft)">▦</div>
+      <h3>Outcome dashboard</h3>
+      <p>For programme managers and policy teams.</p>
+      <ul>
+        <li>Employment, self-employment, apprenticeship rates</li>
+        <li>Wage progression and 12-month retention</li>
+        <li>Cohort · course · provider · district · demographics</li>
+        <li>Skill gaps and non-placement reasons</li>
+      </ul>
+      <div class="role-card__go">Open dashboard →</div>
+    </a>
+
+    <a class="role-card" href="trainee.html">
+      <div class="role-card__ico" style="background:var(--good-soft)">◉</div>
+      <h3>Trainee portal</h3>
+      <p>For the person the data is actually about.</p>
+      <ul>
+        <li>Unique ID, consent controls, contact details</li>
+        <li>Training journey: attendance → assessment → certificate</li>
+        <li>Employment record and wage history</li>
+        <li>Follow-up surveys at 3m / 6m / 1y / 2y</li>
+      </ul>
+      <div class="role-card__go">Open trainee profile →</div>
+    </a>
+
+    <a class="role-card" href="employer.html">
+      <div class="role-card__ico" style="background:var(--warning-soft)">▤</div>
+      <h3>Employer portal</h3>
+      <p>For companies that hire and verify.</p>
+      <ul>
+        <li>Verify employment claims in one click</li>
+        <li>Report joinings, exits and salary revisions</li>
+        <li>Post openings with the skills you need</li>
+        <li>Tell the system which skills are missing</li>
+      </ul>
+      <div class="role-card__go">Open employer portal →</div>
+    </a>
+
+    <a class="role-card" href="admin.html">
+      <div class="role-card__ico" style="background:var(--brand-soft)">⚙</div>
+      <h3>Admin console</h3>
+      <p>For the mission office running the system.</p>
+      <ul>
+        <li>Follow-up campaigns across SMS / WhatsApp / IVR</li>
+        <li>Validation queue for flagged inconsistencies</li>
+        <li>Provider accreditation and performance</li>
+        <li>Role-based access and full audit trail</li>
+      </ul>
+      <div class="role-card__go">Open admin console →</div>
+    </a>
+  </section>
+
+  <section style="max-width:1180px;margin:0 auto 56px;padding:0 28px;width:100%">
+    <div class="card">
+      <div class="card__head">
+        <div>
+          <h3>How the platform closes the loop</h3>
+          <div class="card__sub">Six stages, each feeding the analytics layer</div>
+        </div>
+      </div>
+      <div class="card__body">
+        <div class="grid grid--3" id="flowSteps"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="landing__foot">
+    <span>SkillTrack · demo build with synthetic data — no real personal information.</span>
+    <span class="topbar__spacer"></span>
+    <span>Consent-first · DPDP Act 2023 aligned</span>
+  </footer>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/charts.js"></script>
+<script>
+(function () {
+  const { num, inr, pct, $, esc } = UI;
+  const all = DB.trainees;
+  const s = DB.summarise(all);
+
+  const tiles = [
+    { label: "Trainees tracked",     value: num(s.total),                  meta: "across 5 batches, 8 districts", accent: "var(--series-7)" },
+    { label: "Employment rate",      value: pct(s.employmentRate, 0),      meta: "wage employment at last follow-up", accent: "var(--series-1)" },
+    { label: "Avg. starting salary", value: inr(s.avgStartingSalary),      meta: "per month, all placed trainees", accent: "var(--series-3)" },
+    { label: "Follow-up response",   value: pct(s.responseRate, 0),        meta: "across all due waves", accent: "var(--series-4)" }
+  ];
+  $("#heroStats").innerHTML = tiles.map((t) => `
+    <div class="stat" style="--accent:${t.accent}">
+      <div class="stat__label">${esc(t.label)}</div>
+      <div class="stat__value">${t.value}</div>
+      <div class="stat__meta muted">${esc(t.meta)}</div>
+    </div>`).join("");
+
+  const steps = [
+    ["1", "Registration & consent", "Create the trainee profile with explicit, revocable consent. Issue one unique ID that links records across every programme."],
+    ["2", "Training & assessment", "Enrolment, attendance, assessment scores and certification, linked to the provider and programme that delivered them."],
+    ["3", "Employment linkage", "Connect training to placement signals — employer databases, job portals, self-employment and apprenticeship outcomes."],
+    ["4", "Follow-up system", "Automated SMS / WhatsApp / app checks at 3m, 6m, 1y and 2y, with assisted calling for non-respondents."],
+    ["5", "Data validation", "Verify employer details, cross-check against official APIs, and flag inconsistencies for manual review."],
+    ["6", "Track outcomes", "Employment status, self-employment, apprenticeship, wage progression, job retention and training relevance."]
+  ];
+  $("#flowSteps").innerHTML = steps.map(([n, title, body]) => `
+    <div style="display:flex;gap:12px">
+      <span class="avatar" style="background:var(--brand);flex:none">${n}</span>
+      <div>
+        <div style="font-weight:640">${esc(title)}</div>
+        <div class="small muted" style="margin-top:3px">${esc(body)}</div>
+      </div>
+    </div>`).join("");
+
+  $("#themeBtn").addEventListener("click", UI.cycleTheme);
+})();
+</script>
+</body>
+</html>
