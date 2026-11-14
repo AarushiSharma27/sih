@@ -62,6 +62,10 @@ def test_full_flow():
     uid = tr.get("/api/auth/me").json()["id"]
     co = admin.get("/api/admin/pending").json()["companies"][0]["id"]
     assert admin.post(f"/api/admin/companies/{co}", json={"verified": True}).status_code == 200
+    assert admin.post(f"/api/admin/trainees/{uid}/certificate", json={"verified": False, "note": "Blurry scan, number unreadable"}).status_code == 200
+    assert tr.put("/api/trainee/certificate", json={"certificate_file": PDF}).status_code == 200      # re-upload after rejection
+    with db.connect() as con:
+        assert con.execute("SELECT cert_verified FROM trainees WHERE user_id = ?", (uid,)).fetchone()[0] == 0
     assert admin.get(f"/api/admin/trainees/{uid}/certificate-file").content.startswith(b"%PDF")
     assert tr.get(f"/api/admin/trainees/{uid}/certificate-file").status_code == 403
     assert admin.post(f"/api/admin/trainees/{uid}/certificate", json={"verified": True}).status_code == 422  # note required
@@ -69,6 +73,7 @@ def test_full_flow():
                       json={"verified": True, "note": "Skill India Digital: number and name match"}).status_code == 200
     with db.connect() as con:
         assert con.execute("SELECT verified_by FROM trainees WHERE user_id = ?", (uid,)).fetchone()[0] == "a@gov.in"
+    assert tr.put("/api/trainee/certificate", json={"certificate_file": PDF}).status_code == 409  # verified file is locked
 
     jobs = tr.get("/api/trainee/jobs").json()["jobs"]
     assert [j["id"] for j in jobs] == [job] and abs(jobs[0]["certScore"] - 2 / 3) < 1e-9

@@ -71,6 +71,21 @@ All pages read real data through `assets/js/data.js`, which loads `GET /api/db` 
 the signed-in role). Sections whose data is not collected yet (training providers, course
 fees, wage history, follow-up campaigns) show an empty state.
 
+## Demo data
+
+All fictional, marked "(demo)", password `demo1234`:
+
+```bash
+cd backend
+../.venv/bin/python -m app.demo            # 12 demo companies with 16 open jobs
+../.venv/bin/python -m app.demo trainees   # 200 trainees from backend/demo_trainees.csv (publish the 9 courses first)
+../.venv/bin/python -m app.demo remove     # delete every demo company and trainee
+```
+
+The trainees file needs these courses published (Admin console → Courses) with the same names:
+Data Analytics, Web Development, Welding Technician, Electrician, Automotive Service Technician,
+General Duty Assistant, Retail Sales Associate, Solar PV Technician, Sewing Machine Operator.
+
 ## Tests
 
 ```bash

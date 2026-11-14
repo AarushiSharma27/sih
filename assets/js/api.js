@@ -80,6 +80,7 @@
     logout:        ()            => post("/api/auth/logout"),
     saveOutcome:   (body)        => put("/api/trainee/outcome", body),
     saveResume:    (text)        => put("/api/trainee/resume", { text }),
+    uploadCert:    (dataUrl)     => put("/api/trainee/certificate", { certificate_file: dataUrl }),
     recommended:   ()            => get("/api/trainee/jobs"),
     apply:         (jobId)       => post(`/api/trainee/jobs/${jobId}/apply`),
     postJob:       (body)        => post("/api/employer/jobs", body),

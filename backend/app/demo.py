@@ -2,7 +2,7 @@
 demo.py -- fictional companies and open jobs for demos. NOT real organisations.
 
     python -m app.demo          # add (skips companies already present)
-    python -m app.demo trainees FILE.csv   # import fictional trainees (emails must be @example.com)
+    python -m app.demo trainees [FILE.csv]  # import fictional trainees (default: backend/demo_trainees.csv)
     python -m app.demo remove   # delete every demo company and demo trainee, with their jobs and applications
 
 Demo companies use hr@<name>.demo.skilltrack emails, demo trainees @example.com (a reserved
@@ -14,6 +14,7 @@ from __future__ import annotations
 import csv
 import json
 import sys
+from pathlib import Path
 
 from pydantic import ValidationError
 
@@ -157,8 +158,8 @@ def remove() -> int:
 if __name__ == "__main__":
     if sys.argv[1:] == ["remove"]:
         print(f"Removed {remove()} demo accounts.")
-    elif sys.argv[1:2] == ["trainees"] and len(sys.argv) == 3:
-        n, bad = import_trainees(sys.argv[2])
+    elif sys.argv[1:2] == ["trainees"] and len(sys.argv) <= 3:
+        n, bad = import_trainees(sys.argv[2] if len(sys.argv) == 3 else str(Path(__file__).resolve().parents[1] / "demo_trainees.csv"))
         print(f"Imported {n} demo trainees. Sign in with their email and password demo1234.")
         print("\n".join(["Skipped:"] + bad) if bad else "No rows skipped.")
     else:

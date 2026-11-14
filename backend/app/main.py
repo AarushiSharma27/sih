@@ -337,6 +337,27 @@ def save_outcome(body: Outcome, user: Trainee, con: Con) -> dict:
     return {"ok": True}
 
 
+class CertUpload(BaseModel):
+    certificate_file: str = Field(max_length=3_000_000)
+
+
+@app.put("/api/trainee/certificate")
+def upload_certificate(body: CertUpload, user: Trainee, con: Con) -> dict:
+    """Upload or replace the certificate scan; it goes (back) to pending for the mission office to check."""
+    t = con.execute("SELECT cert_verified, cert_file FROM trainees WHERE user_id = ?", (user["id"],)).fetchone()
+    if t["cert_verified"] == 1 and t["cert_file"]:  # a checked document cannot be swapped afterwards
+        raise HTTPException(409, "Your certificate is already verified and cannot be replaced.")
+    raw, ext = decode_certificate(body.certificate_file)
+    db.UPLOAD_DIR.mkdir(exist_ok=True)
+    for old in db.UPLOAD_DIR.glob(f"cert-{user['id']}.*"):
+        old.unlink()
+    (db.UPLOAD_DIR / f"cert-{user['id']}.{ext}").write_bytes(raw)
+    con.execute("UPDATE trainees SET cert_file = ?, cert_verified = 0, verified_by = NULL, verified_at = NULL, verify_note = NULL "
+                "WHERE user_id = ?", (f"cert-{user['id']}.{ext}", user["id"]))
+    log(con, user["email"], "Uploaded certificate for verification", "self")
+    return {"ok": True}
+
+
 @app.get("/api/trainee/jobs")
 def recommended_jobs(user: Trainee, con: Con) -> dict:
     """Round 1: open jobs at verified companies, ranked by certificate-to-JD skill match."""
@@ -778,6 +799,7 @@ def snapshot(user: Annotated[dict, Depends(current_user)], con: Con) -> dict:
                 "FROM applications a JOIN jobs j ON j.id = a.job_id JOIN companies c ON c.id = j.company_id "
                 "WHERE a.trainee_id = ? ORDER BY a.created DESC", (user["id"],))),
             "resume": t["resume_text"],
+            "certFile": bool(t["cert_file"]), "verifyNote": t["verify_note"] if t["cert_verified"] == -1 else None,
         })
         out["TRAINEE_USER"] = T
     return out

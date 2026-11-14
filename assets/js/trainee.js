@@ -296,4 +296,24 @@
     const r = await API.saveResume($("#resume").value);
     toast(r.ok ? "Resume saved" : r.error, r.ok ? "" : "bad");
   });
+
+  /* ---------- certificate upload ---------- */
+  const locked = P.certStatus === 1 && P.certFile;  // the server refuses to replace a checked document
+  $("#certSub").textContent = `${P.certId} · ${P.course}`;
+  $("#certState").innerHTML = locked ? "✓ Verified by the mission office against your uploaded certificate."
+    : P.certStatus === -1 ? `Rejected${P.verifyNote ? ": " + esc(P.verifyNote) : ""}. Upload a clearer or correct copy to be checked again.`
+    : P.certFile ? "Uploaded — waiting for the mission office to check it. You can replace it until then."
+    : P.certStatus === 1 ? "Verified without an uploaded file. Uploading one sends it for a fresh check."
+    : "No certificate uploaded yet. Upload a PDF, JPG or PNG (under 2 MB) to be verified.";
+  $("#certUploadRow").hidden = Boolean(locked);
+  $("#uploadCert").addEventListener("click", async () => {
+    const f = $("#certFile").files[0];
+    if (!f) { toast("Choose your certificate file first", "warn"); return; }
+    if (f.size > 2 * 1024 * 1024) { toast("The file must be under 2 MB", "warn"); return; }
+    const dataUrl = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(f); });
+    const r = await API.uploadCert(dataUrl);
+    if (!r.ok) { toast(r.error, "bad"); return; }
+    toast("Certificate uploaded — sent for verification");
+    setTimeout(() => location.reload(), 900);
+  });
 })();
