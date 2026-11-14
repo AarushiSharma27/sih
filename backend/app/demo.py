@@ -116,7 +116,7 @@ def add() -> int:
             uid = con.execute("INSERT INTO users (role, email, name, pw_hash) VALUES ('employer', ?, ?, ?)",
                               (email, f"{name} HR", db.hash_pw("demo1234"))).lastrowid
             cid = con.execute("INSERT INTO companies (user_id, name, gstin, website, district, sector, size, verified) "
-                              "VALUES (?, ?, ?, '', ?, ?, ?, 1)", (uid, name + " (demo)", gstin, district, sector, size)).lastrowid
+                              "VALUES (?, ?, ?, '', ?, ?, ?, 1)", (uid, name, gstin, district, sector, size)).lastrowid
             for title, skills, lo, hi, openings, desc in jobs:
                 con.execute("INSERT INTO jobs (company_id, title, description, skills, district, salary_min, salary_max, openings) "
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (cid, title, desc, json.dumps(skills), district, lo, hi, openings))
@@ -141,7 +141,7 @@ def import_trainees(path: str) -> tuple[int, list[str]]:
                 problems.append(f"{where}: course '{row['course']}' is not published")
                 continue
             try:
-                t = TraineeSignup(name=row["name"] + " (demo)", email=row["email"], password="demo1234", phone=row["phone"],
+                t = TraineeSignup(name=row["name"], email=row["email"], password="demo1234", phone=row["phone"],
                                   gender=row["gender"], dob=row["dob"], district=row["district"],
                                   course_id=courses[row["course"].lower()], certificate_no=row["certificate_no"],
                                   certified_on=row["certified_on"], consent=True, skills=[row["skills"]])

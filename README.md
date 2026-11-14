@@ -73,7 +73,7 @@ fees, wage history, follow-up campaigns) show an empty state.
 
 ## Demo data
 
-All fictional, marked "(demo)", password `demo1234`:
+All fictional (demo accounts use `.demo.skilltrack` and `example.com` emails), password `demo1234`:
 
 ```bash
 cd backend
