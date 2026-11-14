@@ -741,3 +741,12 @@ table.tbl tbody tr:last-child td { border-bottom: 0; }
 
 /* the hidden attribute must win over component display rules */
 [hidden] { display: none !important; }
+
+/* file pickers: the native button is near-invisible on the dark theme, so style it like .btn */
+input[type="file"] { font: inherit; font-size: 13px; color: var(--text-secondary); max-width: 100%; }
+input[type="file"]::file-selector-button {
+  font: inherit; font-weight: 560; margin-right: 10px; padding: 7px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary);
+}
+input[type="file"]::file-selector-button:hover { background: var(--surface-3); }
+input[type="file"]:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }

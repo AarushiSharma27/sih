@@ -108,7 +108,7 @@ def add() -> int:
 
 
 def import_trainees(path: str) -> tuple[int, list[str]]:
-    """Validate each row like the registration form, then insert it as a verified-certificate trainee."""
+    """Validate each row like the registration form, then insert it with its certificate pending verification."""
     from .main import TraineeSignup, norm  # the API's own validation rules
     db.init()
     added, problems = 0, []
@@ -142,7 +142,7 @@ def import_trainees(path: str) -> tuple[int, list[str]]:
             con.execute(
                 "INSERT INTO trainees (user_id, phone, gender, dob, district, course_id, certificate_no, certified_on, "
                 "cert_verified, consent_at, resume_text, skills, outcome, employer_name, salary, reason, outcome_updated) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), ?, ?, ?, ?, ?, ?, CASE WHEN ? IS NULL THEN NULL ELSE datetime('now') END)",
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, datetime('now'), ?, ?, ?, ?, ?, ?, CASE WHEN ? IS NULL THEN NULL ELSE datetime('now') END)",
                 (uid, t.phone, t.gender, t.dob, t.district, t.course_id, t.certificate_no, t.certified_on, row["resume_text"],
                  json.dumps(norm(t.skills)), outcome, row["employer_name"] or None,
                  int(row["salary"]) if row["salary"] else None, row["reason"] or None, outcome))

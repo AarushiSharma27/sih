@@ -142,7 +142,8 @@
         <div class="row row--tight nowrap">
           ${f.kind === "claim"
             ? `<button class="btn btn--sm" data-flag="dismiss" data-id="${f.id}" title="Hides it on this page only; nothing is saved">Dismiss (this view)</button>`
-            : `<button class="btn btn--sm btn--primary" data-flag="approve" data-id="${f.id}">Verify</button>
+            : `<button class="btn btn--sm btn--primary" data-flag="approve" data-id="${f.id}"
+                 ${f.kind === "certificate" && !f.file ? 'disabled title="No certificate uploaded yet — nothing to verify"' : ""}>Verify</button>
                <button class="btn btn--sm btn--danger" data-flag="reject" data-id="${f.id}">Reject</button>`}
         </div>
       </div>`).join("")
