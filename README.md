@@ -77,14 +77,12 @@ All fictional, marked "(demo)", password `demo1234`:
 
 ```bash
 cd backend
-../.venv/bin/python -m app.demo            # 12 demo companies with 16 open jobs
-../.venv/bin/python -m app.demo trainees   # 200 trainees from backend/demo_trainees.csv (publish the 9 courses first)
+../.venv/bin/python -m app.demo            # 9 demo courses + 12 demo companies with 16 open jobs
+../.venv/bin/python -m app.demo trainees   # 200 trainees from backend/demo_trainees.csv (certificates pending)
 ../.venv/bin/python -m app.demo remove     # delete every demo company and trainee
 ```
 
-The trainees file needs these courses published (Admin console → Courses) with the same names:
-Data Analytics, Web Development, Welding Technician, Electrician, Automotive Service Technician,
-General Duty Assistant, Retail Sales Associate, Solar PV Technician, Sewing Machine Operator.
+Demo course codes and source links are placeholders, not official qualification packs.
 
 ## Tests
 

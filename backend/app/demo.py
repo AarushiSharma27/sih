@@ -1,7 +1,7 @@
 """
 demo.py -- fictional companies and open jobs for demos. NOT real organisations.
 
-    python -m app.demo          # add (skips companies already present)
+    python -m app.demo          # add 9 demo courses + 12 companies with jobs (skips ones already present)
     python -m app.demo trainees [FILE.csv]  # import fictional trainees (default: backend/demo_trainees.csv)
     python -m app.demo remove   # delete every demo company and demo trainee, with their jobs and applications
 
@@ -21,6 +21,19 @@ from pydantic import ValidationError
 from . import db
 
 DOMAIN = "demo.skilltrack"
+
+# Demo courses: names match backend/demo_trainees.csv; QP codes and links are placeholders, not official documents.
+COURSES = [
+    ("Data Analytics", "WS110", "IT", ["Excel", "SQL", "Power BI", "Statistics", "Python"]),
+    ("Web Development", "WS111", "IT", ["JavaScript", "HTML/CSS", "React", "Git", "REST APIs"]),
+    ("Welding Technician", "WS112", "Capital Goods", ["MIG", "TIG", "ARC", "Blueprint reading"]),
+    ("Electrician", "WS113", "Power", ["Wiring", "Motor control", "PLC basics", "Safety cert"]),
+    ("Automotive Service Technician", "WS114", "Automotive", ["Engine service", "Diagnostics tool", "EV basics"]),
+    ("General Duty Assistant", "WS115", "Healthcare", ["Patient care", "Vitals", "Infection control", "Basic life support", "EMR entry"]),
+    ("Retail Sales Associate", "WS116", "Retail", ["Customer handling", "POS billing", "Upselling", "Spoken English", "Inventory app"]),
+    ("Solar PV Technician", "WS117", "Green Energy", ["Panel install", "Inverter config", "Rooftop safety", "Net metering"]),
+    ("Sewing Machine Operator", "WS118", "Textiles", ["Machine operation", "Stitching", "Quality check"]),
+]
 
 # name, sector, size, district, GSTIN, [(title, skills, salary_min, salary_max, openings, description)]
 COMPANIES = [
@@ -92,6 +105,10 @@ def add() -> int:
     db.init()
     added = 0
     with db.connect() as con:
+        for name, code, sector, skills in COURSES:  # a course already published under this name is left as is
+            slug = name.lower().replace(" ", "-")
+            con.execute("INSERT OR IGNORE INTO courses (name, qp_code, sector, skills, source_url) VALUES (?, ?, ?, ?, ?)",
+                        (name, code, sector, json.dumps(skills), f"https://example.org/demo-qp/{slug}"))
         for name, sector, size, district, gstin, jobs in COMPANIES:
             email = f"hr@{name.split()[0].lower()}.{DOMAIN}"
             if con.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
