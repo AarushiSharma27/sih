@@ -42,7 +42,7 @@
       <a class="btn" href="dashboard.html">Open live dashboard</a>
     </div>
     <p class="small muted" style="margin-top:14px">
-      Or <a href="trainee.html">look at a trainee record</a> to see what two years of tracking looks like.
+      Hiring? <a href="company.html">Register your company</a> to post jobs and receive screened, certified candidates.
     </p>
   </section>
 
@@ -56,8 +56,8 @@
           <div class="role-card__ico" style="background:var(--info-soft);width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px">↻</div>
           <h3 style="margin:12px 0 6px;font-size:15px">Longitudinal outcome tracking</h3>
           <p class="small muted" style="margin:0;line-height:1.6">
-            Not a snapshot at certification. Every trainee is followed at 3, 6, 12 and 24
-            months — through employment, wage progression, job changes and retention.
+            Not a snapshot at certification. Trainees keep their status current, and every hire
+            an employer confirms on the platform is recorded as a verified placement.
           </p>
         </div>
       </div>
@@ -67,7 +67,7 @@
           <h3 style="margin:12px 0 6px;font-size:15px">Consent-based &amp; privacy-conscious</h3>
           <p class="small muted" style="margin:0;line-height:1.6">
             Nothing is tracked without explicit, withdrawable consent. Dashboards show
-            aggregates only — names, numbers and salaries never appear in public views.
+            aggregates; only companies a trainee applies to see that trainee's profile.
           </p>
         </div>
       </div>
@@ -76,8 +76,8 @@
           <div class="role-card__ico" style="background:var(--warning-soft);width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px">◫</div>
           <h3 style="margin:12px 0 6px;font-size:15px">Data-driven skill-gap analysis</h3>
           <p class="small muted" style="margin:0;line-height:1.6">
-            What employers ask for, set against what the curriculum taught — so courses get
-            fixed on evidence rather than on the last complaint anyone happened to hear.
+            Skills in real job descriptions from verified companies, set against each course's
+            published qualification pack — so courses get fixed on evidence.
           </p>
         </div>
       </div>
@@ -91,9 +91,9 @@
       <p>For programme managers and policy teams.</p>
       <ul>
         <li>Employment, self-employment, apprenticeship rates</li>
-        <li>Wage progression and 12-month retention</li>
-        <li>Cohort · course · provider · district · demographics</li>
-        <li>Skill gaps and non-placement reasons</li>
+        <li>Employer-verified placements and income</li>
+        <li>Cohort · course · district · demographics</li>
+        <li>Skill gaps from real job descriptions</li>
       </ul>
       <div class="role-card__go">Open dashboard →</div>
     </a>
@@ -103,10 +103,10 @@
       <h3>Trainee portal</h3>
       <p>For the person the data is actually about.</p>
       <ul>
-        <li>Unique ID, consent controls, contact details</li>
-        <li>Training journey: attendance → assessment → certificate</li>
-        <li>Employment record and wage history</li>
-        <li>Follow-up surveys at 3m / 6m / 1y / 2y</li>
+        <li>Unique ID and verified certificate</li>
+        <li>Jobs matched to your certified course</li>
+        <li>Resume screening against each job</li>
+        <li>Keep your employment status current</li>
       </ul>
       <div class="role-card__go">Open trainee profile →</div>
     </a>
@@ -116,10 +116,10 @@
       <h3>Employer portal</h3>
       <p>For companies that hire and verify.</p>
       <ul>
-        <li>Verify employment claims in one click</li>
-        <li>Report joinings, exits and salary revisions</li>
+        <li>GSTIN-verified company profile</li>
         <li>Post openings with the skills you need</li>
-        <li>Tell the system which skills are missing</li>
+        <li>See only candidates who pass screening</li>
+        <li>Confirm employment claims in one click</li>
       </ul>
       <div class="role-card__go">Open employer portal →</div>
     </a>
@@ -129,10 +129,10 @@
       <h3>Admin console</h3>
       <p>For the mission office running the system.</p>
       <ul>
-        <li>Follow-up campaigns across SMS / WhatsApp / IVR</li>
-        <li>Validation queue for flagged inconsistencies</li>
-        <li>Provider accreditation and performance</li>
-        <li>Role-based access and full audit trail</li>
+        <li>Verify company GSTINs</li>
+        <li>Verify trainee certificates</li>
+        <li>Validation queue for disputed employment</li>
+        <li>Role-based access and audit trail</li>
       </ul>
       <div class="role-card__go">Open admin console →</div>
     </a>
@@ -153,41 +153,35 @@
   </section>
 
   <footer class="landing__foot">
-    <span>SkillTrack · demo build with synthetic data — no real personal information.</span>
+    <span>SkillTrack · MP State Skill Development Mission</span>
     <span class="topbar__spacer"></span>
     <span>Consent-first · DPDP Act 2023 aligned</span>
   </footer>
 </div>
 
-<script src="assets/js/data.js"></script>
 <script src="assets/js/app.js"></script>
-<script src="assets/js/charts.js"></script>
 <script>
 (function () {
-  const { num, inr, pct, $, esc } = UI;
-  const all = DB.trainees;
-  const s = DB.summarise(all);
-
-  const tiles = [
-    { label: "Trainees tracked",     value: num(s.total),                  meta: "across 5 batches, 8 districts", accent: "var(--series-7)" },
-    { label: "Employment rate",      value: pct(s.employmentRate, 0),      meta: "wage employment at last follow-up", accent: "var(--series-1)" },
-    { label: "Avg. starting salary", value: inr(s.avgStartingSalary),      meta: "per month, all placed trainees", accent: "var(--series-3)" },
-    { label: "Follow-up response",   value: pct(s.responseRate, 0),        meta: "across all due waves", accent: "var(--series-4)" }
-  ];
-  $("#heroStats").innerHTML = tiles.map((t) => `
-    <div class="stat" style="--accent:${t.accent}">
-      <div class="stat__label">${esc(t.label)}</div>
-      <div class="stat__value">${t.value}</div>
-      <div class="stat__meta muted">${esc(t.meta)}</div>
-    </div>`).join("");
+  const { num, $, esc } = UI;
+  // public counts straight from the database — no sign-in needed
+  fetch("/api/meta").then((r) => r.json()).then((m) => {
+    const st = m.stats;
+    $("#heroStats").innerHTML = [
+      ["Registered trainees", st.trainees, "signed up with consent", "var(--series-7)"],
+      ["Verified companies", st.verifiedCompanies, "GSTIN checked by the mission", "var(--series-1)"],
+      ["Open jobs", st.openJobs, "posted by verified companies", "var(--series-3)"],
+      ["Verified placements", st.verifiedPlacements, "hires confirmed by employers", "var(--series-4)"]
+    ].map(([l, v, meta, accent]) => `<div class="stat" style="--accent:${accent}"><div class="stat__label">${esc(l)}</div>
+      <div class="stat__value">${num(v)}</div><div class="stat__meta muted">${esc(meta)}</div></div>`).join("");
+  }).catch(() => { $("#heroStats").innerHTML = ""; });
 
   const steps = [
-    ["1", "Registration & consent", "Create the trainee profile with explicit, revocable consent. Issue one unique ID that links records across every programme."],
-    ["2", "Training & assessment", "Enrolment, attendance, assessment scores and certification, linked to the provider and programme that delivered them."],
-    ["3", "Employment linkage", "Connect training to placement signals — employer databases, job portals, self-employment and apprenticeship outcomes."],
-    ["4", "Follow-up system", "Automated SMS / WhatsApp / app checks at 3m, 6m, 1y and 2y, with assisted calling for non-respondents."],
-    ["5", "Data validation", "Verify employer details, cross-check against official APIs, and flag inconsistencies for manual review."],
-    ["6", "Track outcomes", "Employment status, self-employment, apprenticeship, wage progression, job retention and training relevance."]
+    ["1", "Register with consent", "Trainees sign up with their certificate number; companies sign up with their GSTIN."],
+    ["2", "Verify", "The mission checks each certificate with the issuing body and each GSTIN on the GST portal."],
+    ["3", "Post jobs", "Verified companies post job descriptions with the skills they require."],
+    ["4", "Round 1: certificate match", "Trainees are recommended jobs whose required skills their certified course teaches."],
+    ["5", "Round 2: resume screening", "On applying, the resume is screened against the job's skills; employers see only those who pass."],
+    ["6", "Track outcomes", "Employer-confirmed hires are verified placements; trainees keep their status up to date."]
   ];
   $("#flowSteps").innerHTML = steps.map(([n, title, body]) => `
     <div style="display:flex;gap:12px">

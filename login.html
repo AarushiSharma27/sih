@@ -67,7 +67,7 @@
               <label for="password">Password</label>
               <input class="input" type="password" id="password" autocomplete="current-password"
                      placeholder="••••••••" disabled>
-              <span class="hint">Any value works in this demo build.</span>
+              
               <span class="field__err" id="passwordErr" hidden></span>
             </div>
           </div>
@@ -77,7 +77,7 @@
               <input type="checkbox" id="remember">
               <span>Keep me signed in on this device</span>
             </label>
-            <a class="small" href="#" data-demo="A reset link would be sent to the registered mobile number.">
+            <a class="small" href="#" data-demo="Password reset is not available yet. Contact the mission office." data-demo-kind="warn">
               Forgotten your password?
             </a>
           </div>
@@ -88,7 +88,7 @@
           </div>
         </div>
         <div class="card__foot">
-          <span class="small muted">🔒 Sessions are logged. Administrator sign-in also requires MFA.</span>
+          <span class="small muted">🔒 Passwords are stored hashed. Sessions expire after 30 days.</span>
           <span class="topbar__spacer"></span>
           <button class="btn btn--primary" type="submit" id="submitBtn" disabled>Sign in</button>
         </div>
@@ -111,12 +111,12 @@
     </div>
 
     <p class="small muted" style="text-align:center;margin-top:22px">
-      New trainee? <a href="register.html">Register and get your SkillTrack ID →</a>
+      New trainee? <a href="register.html">Register and get your SkillTrack ID →</a> · Company? <a href="company.html">Register your company →</a>
     </p>
   </section>
 
   <footer class="landing__foot">
-    <span>SkillTrack · demo build with synthetic data — no real personal information.</span>
+    <span>SkillTrack · MP State Skill Development Mission</span>
     <span class="topbar__spacer"></span>
     <span>Consent-first · DPDP Act 2023 aligned</span>
   </footer>
@@ -124,6 +124,7 @@
 
 <script src="assets/js/data.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/api.js"></script>
 <script src="assets/js/login.js"></script>
 </body>
 </html>

@@ -82,9 +82,14 @@
               <span class="field__err" id="phoneErr" hidden></span>
             </div>
             <div class="field">
-              <label for="email">Email <span class="muted">(optional)</span></label>
-              <input class="input" type="email" id="email" autocomplete="email" placeholder="you@example.in">
+              <label for="email">Email</label>
+              <input class="input" type="email" id="email" autocomplete="username" placeholder="you@example.in">
               <span class="field__err" id="emailErr" hidden></span>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input class="input" type="password" id="password" autocomplete="new-password" placeholder="At least 8 characters">
+              <span class="field__err" id="passwordErr" hidden></span>
             </div>
             <div class="field">
               <label for="altPhone">Alternate contact <span class="muted">(optional)</span></label>
@@ -142,6 +147,29 @@
                 <option>More than 5 years</option>
               </select>
               <span class="field__err" id="experienceErr" hidden></span>
+            </div>
+            <div class="field">
+              <label for="course">Certified course</label>
+              <select class="select" id="course"></select>
+              <span class="hint">The course on your certificate. Jobs are matched to the skills it teaches.</span>
+              <span class="field__err" id="courseErr" hidden></span>
+            </div>
+            <div class="field">
+              <label for="certNo">Certificate number</label>
+              <input class="input" type="text" id="certNo" placeholder="As printed on your certificate">
+              <span class="hint">Verified by the mission office before you receive job matches.</span>
+              <span class="field__err" id="certNoErr" hidden></span>
+            </div>
+            <div class="field">
+              <label for="certDate">Certificate date</label>
+              <input class="input" type="date" id="certDate">
+              <span class="field__err" id="certDateErr" hidden></span>
+            </div>
+            <div class="field">
+              <label for="certFile">Upload your certificate</label>
+              <input class="input" type="file" id="certFile" accept="application/pdf,image/jpeg,image/png">
+              <span class="hint">PDF, JPG or PNG, under 2 MB. Checked by the mission office against the issuing body.</span>
+              <span class="field__err" id="certFileErr" hidden></span>
             </div>
             <div class="field">
               <label for="industry">Preferred industry</label>
@@ -280,9 +308,8 @@
           <span class="banner__ico">→</span>
           <div>
             <strong>What happens next</strong>
-            Your provider confirms your enrolment, then your attendance and assessment are
-            recorded against this ID. After certification you tell us what you are doing —
-            and we check in at 3, 6, 12 and 24 months.
+            The mission office verifies your certificate. Then you get job recommendations
+            matched to your course; add your resume on your profile so you can apply.
           </div>
         </div>
 
@@ -296,7 +323,7 @@
   </section>
 
   <footer class="landing__foot">
-    <span>SkillTrack · demo build with synthetic data — no real personal information.</span>
+    <span>SkillTrack · MP State Skill Development Mission</span>
     <span class="topbar__spacer"></span>
     <span>Consent-first · DPDP Act 2023 aligned</span>
   </footer>

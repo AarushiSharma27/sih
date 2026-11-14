@@ -11,22 +11,25 @@ actually happened to trainees.
 
 > Train → Track → Measure → Understand → Improve
 
-## Features
+## How it works
 
-- **Outcome dashboard**: placement, wage and retention KPIs, filterable by
-  course, district, batch, provider, outcome and gender.
-- **Follow-up waves**: surveys at 3, 6, 12 and 24 months, with response funnels
-  and wage progression over time.
-- **Insights & reports**: provider league table, cost per placement (ROI),
-  equity gaps by gender and district, reasons for non-placement and skill gaps.
-- **Trainee portal**: profile, outcome updates, follow-up surveys and course
-  recommendations.
-- **Employer portal**: verify employment claims, post jobs and find matching
-  certified candidates.
-- **Admin console**: data-validation queue, data-quality scorecard, consent
-  coverage, follow-up campaigns and an audit log.
-- **Consent enforced in the API**: records of trainees who withheld consent
-  cannot be read individually. They still count in aggregates.
+1. **Admin publishes courses** with the skills each one teaches, copied from the official
+   qualification pack (QP/NSQF code and source link required).
+2. **Trainees register** with consent, their course and certificate number. **Companies
+   register** with their GSTIN.
+3. **Admin verifies** each GSTIN (GST portal) and certificate (issuing body). Nothing
+   unverified is matched or counted as verified.
+4. **Verified companies post jobs** with a job description and required skills.
+5. **Round 1 – certificate match:** trainees with a verified certificate are recommended open
+   jobs whose required skills their course teaches, ranked by coverage.
+6. **Round 2 – resume screening:** on applying, the resume is matched against the job's
+   skills. At least 50% must appear (`PASS_MARK` in `backend/app/match.py`). Employers see
+   only candidates who pass.
+7. **Employer shortlists, rejects or hires.** A hire is recorded as a *verified placement*;
+   trainees can also self-report their status.
+8. **Dashboard** (admin): placement rate, verified placements, income, hiring pipeline, and
+   skill gaps, where *industry demand* is the skills in open job descriptions from verified
+   companies and *taught* is the course's published skill list.
 
 ## Tech stack
 
@@ -34,73 +37,43 @@ actually happened to trainees.
 | --- | --- |
 | Frontend | Plain HTML, CSS and JavaScript (no build step) |
 | Backend | Python, FastAPI, Uvicorn, Pydantic |
-| Data | A seeded 10,000-trainee cohort, generated identically in the browser and the API |
+| Data | SQLite (`backend/skilltrack.db`, override with `SKILLTRACK_DB`) |
 
 ## Getting started
 
 Requires Python 3.10+.
 
 ```bash
-pip install -r backend/requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r backend/requirements.txt
 cd backend
-python -m uvicorn app.main:app --reload --port 8000
+../.venv/bin/python -m app.db create-admin you@mpssdm.gov.in "Your Name"   # first admin
+../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Then open:
-
-- App: <http://localhost:8000>
-- API docs (Swagger): <http://localhost:8000/docs>
-
-The backend also serves the frontend, so this is the only process you need.
-
-**Frontend only:** you can also open `index.html` directly or serve the repo
-root with any static server. The pages generate their data in the browser and
-fall back to a local simulation when the API isn't reachable.
-
-### Signing in (demo)
-
-On `login.html`, pick a role (Trainee, Training provider, Employer or
-Administrator) and enter an ID in the format shown, e.g. `SKL-MP-2025-03102`
-for a trainee. This is a demo build, so any non-empty password is accepted.
+Open <http://localhost:8000>, sign in as the admin and publish at least one course; trainees
+cannot register until one exists. API docs: <http://localhost:8000/docs>.
 
 ## Pages
 
-| Page | Purpose |
-| --- | --- |
-| `index.html` | Landing page |
-| `login.html` / `register.html` | Role-based sign-in, trainee registration |
-| `dashboard.html` | Programme outcome dashboard |
-| `insights.html` | Insights & recommended actions |
-| `reports.html` | Reports and exports |
-| `trainee.html` / `outcome.html` | Trainee profile, outcome updates |
-| `employer.html` | Employer portal |
-| `admin.html` | Admin console |
-| `notifications.html` | Notifications |
+| Page | Who | Purpose |
+| --- | --- | --- |
+| `index.html` | everyone | Landing page with live platform counts |
+| `login.html` | everyone | Sign in (trainees can use their SkillTrack ID or email) |
+| `register.html` / `company.html` | everyone | Trainee / company registration |
+| `dashboard.html`, `insights.html`, `reports.html` | admin | Outcome analytics, findings, exports |
+| `admin.html` | admin | Verify GSTINs and certificates, publish courses, audit log |
+| `employer.html` | employer | Post jobs, review screened applicants, confirm employment |
+| `trainee.html`, `outcome.html` | trainee | Profile, resume, job matches, applications, status updates |
+| `notifications.html` | all signed in | Role-specific alerts from real records |
 
-## Project structure
-
-```
-.
-├── *.html              # One file per page
-├── assets/
-│   ├── css/styles.css
-│   └── js/             # Per-page scripts plus data.js (cohort), api.js (API client), charts.js
-└── backend/
-    ├── app/            # FastAPI app: routers, analytics, data generator, in-memory store
-    ├── tests/          # API and browser/backend data-parity tests
-    └── requirements.txt
-```
+All pages read real data through `assets/js/data.js`, which loads `GET /api/db` (scoped to
+the signed-in role). Sections whose data is not collected yet (training providers, course
+fees, wage history, follow-up campaigns) show an empty state.
 
 ## Tests
 
 ```bash
-pip install pytest
-python -m pytest backend/tests -q
+.venv/bin/pip install pytest httpx
+cd backend && ../.venv/bin/python -m pytest tests -q
 ```
-
-The parity test needs `node` on your PATH and is skipped without it.
-
-## More detail
-
-See [`backend/README.md`](backend/README.md) for the full API endpoint list, how
-the shared data generation works, design notes and production next steps.

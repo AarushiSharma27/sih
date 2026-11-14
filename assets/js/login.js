@@ -14,10 +14,10 @@
     {
       id: "trainee", icon: "◉", title: "Trainee", accent: "var(--good-soft)",
       sub: "See your training record, update your outcome and answer follow-ups.",
-      idLabel: "SkillTrack trainee ID", placeholder: "SKL-MP-2025-03102",
-      hint: "The ID issued when you registered — printed on your certificate.",
-      pattern: /^SKL-MP-\d{4}-\d{5}$/i,
-      patternHelp: "Trainee IDs look like SKL-MP-2025-03102.",
+      idLabel: "SkillTrack ID or email", placeholder: "SKL-MP-2026-00001 or you@example.com",
+      hint: "The ID shown when you registered, or your registered email.",
+      pattern: /^(SKL-MP-\d{4}-\d{5}|[^@\s]+@[^@\s]+\.[^@\s]+)$/i,
+      patternHelp: "Enter your SkillTrack ID (SKL-MP-2026-00001) or email.",
       go: "trainee.html"
     },
     {
@@ -32,17 +32,17 @@
     {
       id: "employer", icon: "▤", title: "Employer", accent: "var(--warning-soft)",
       sub: "Verify employment claims, report exits and post openings.",
-      idLabel: "Employer ID or work email", placeholder: "hr@aaravtech.in",
+      idLabel: "Work email", placeholder: "hr@yourcompany.in",
       hint: "The address the verification requests are sent to.",
-      pattern: null,
-      patternHelp: "",
+      pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+      patternHelp: "Enter a full email address.",
       go: "employer.html"
     },
     {
       id: "admin", icon: "⚙", title: "Administrator", accent: "var(--brand-soft)",
       sub: "Programme analytics, data validation, campaigns and access control.",
-      idLabel: "Official email address", placeholder: "r.mehta@mpssdm.gov.in",
-      hint: "Government address only. A second factor is required after this step.",
+      idLabel: "Official email address", placeholder: "you@mpssdm.gov.in",
+      hint: "The address your administrator account was created with.",
       pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
       patternHelp: "Enter a full email address.",
       go: "admin.html"
@@ -108,9 +108,6 @@
       setError("userId", "");
     }
 
-    // Demo build: any non-empty password is accepted, but an empty one still
-    // fails — an auth form that waves through a blank field teaches the wrong
-    // thing to everyone who demos it.
     ok = setError("password", password.value ? "" : "Enter your password.") && ok;
     return ok;
   }
@@ -119,29 +116,34 @@
     el.addEventListener("input", () => { if (el.value) setError(el.id, ""); }));
 
   /* ---------- submit ---------- */
-  $("#loginForm").addEventListener("submit", (e) => {
+  $("#loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!selected) { toast("Choose a role first", "warn"); return; }
     clearErrors();
     if (!validate()) return;
 
-    // A known trainee ID deep-links to that record; anything else opens the
-    // demo profile, so a reviewer typing a plausible ID still lands somewhere real.
-    let target = selected.go;
-    if (selected.id === "trainee") {
-      const id = userId.value.trim().toUpperCase();
-      const known = DB.trainees.some((t) => t.id === id);
-      if (known) target = "trainee.html?id=" + encodeURIComponent(id);
+    if (selected.id === "provider") {
+      showError("Training-provider accounts are not available yet. Contact the mission office.");
+      return;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Signing in…";
-
-    setTimeout(() => {
-      if (selected.id === "admin") toast("Second factor accepted — opening admin console");
-      location.href = target;
-    }, 450);
+    const r = await API.post("/api/auth/login", { email: userId.value.trim(), password: password.value });
+    if (!r.ok) {
+      showError(r.error);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Sign in";
+      return;
+    }
+    // the server decides the role; a mismatch with the picked card is not an error
+    location.href = { admin: "dashboard.html", employer: "employer.html", trainee: "trainee.html" }[r.data.role];
   });
+
+  function showError(msg) {
+    $("#loginErrorText").textContent = " " + msg;
+    $("#loginError").hidden = false;
+  }
 
   /* ---------- theme toggle ---------- */
   $("#themeBtn").addEventListener("click", UI.cycleTheme);

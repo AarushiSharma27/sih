@@ -11,13 +11,9 @@
 
   const { $, $$, esc, date, inr, toast } = UI;
 
-  const P = DB.TRAINEE_USER;
+  const P = DB.TRAINEE_USER;   // null unless a trainee is signed in
 
-  UI.renderShell({
-    title: "Notifications",
-    crumb: "Alerts, reminders and requests",
-    user: { name: P.name, role: "Trainee · " + P.district }
-  });
+  UI.renderShell({ title: "Notifications", crumb: "Alerts, reminders and requests", user: { name: DB.USER.name, role: DB.USER.role } });
 
   /* ---------- category presentation ---------- */
   const KINDS = {
@@ -29,144 +25,105 @@
     alert:         { icon: "⚑", label: "Alert",         tone: "var(--serious-soft)" }
   };
 
-  /* ---------- build each role's inbox from real records ---------- */
+  /* ---------- build each role's inbox from real records (dates come from the records) ---------- */
+  const addMonths = (iso, m) => { const d = new Date(iso + "T00:00:00"); d.setMonth(d.getMonth() + m); return d.toISOString().slice(0, 10); };
+  const STAGE = { screened_in: "passed resume screening", screened_out: "did not pass resume screening",
+                  shortlisted: "you were shortlisted", rejected: "you were not selected", hired: "you were hired" };
 
   function traineeNotices() {
     const out = [];
     const waves = { "3m": "3-month", "6m": "6-month", "12m": "12-month", "24m": "24-month" };
 
-    Object.keys(P.follow || {}).forEach((w) => {
-      const status = P.follow[w];
-      if (status === "scheduled") return;
-      if (status === "responded" || status === "assisted") {
-        out.push({
-          kind: "followup", unread: false, action: false, at: "2026-07-14",
-          title: `${waves[w]} follow-up recorded`,
-          body: "Thank you — your response keeps your record verified and counts towards your district's outcome figures."
-        });
-      } else {
-        out.push({
-          kind: "followup", unread: true, action: true, at: "2026-09-16",
-          title: `Your ${waves[w]} employment follow-up is due`,
-          body: "Three questions, about a minute. Unanswered waves are recorded as no-response and weaken the evidence for your course.",
-          cta: { label: "Answer now", href: "outcome.html" }
-        });
-      }
-    });
-
-    out.push({
-      kind: "employment", unread: false, action: false, at: "2026-09-02",
-      title: `${P.employer} confirmed your employment record`,
-      body: `Your role as ${P.role} at ${inr(P.currentSalary)}/month is now marked verified.`
-    });
-
-    out.push({
-      kind: "certification", unread: false, action: false, at: P.certDate,
-      title: "Your certificate has been issued",
-      body: `NSQF Level 4 · ${P.certId} for ${P.course}. Employers you apply to can see this.`
-    });
-
-    const gap = DB.SKILL_GAPS.find((g) => g.course === P.course);
-    if (gap) {
-      const missing = gap.industry.filter((k) => !gap.taught.includes(k));
-      if (missing.length) {
-        out.push({
-          kind: "missing", unread: true, action: true, at: "2026-08-19",
-          title: "A course is recommended for you",
-          body: `Employers in your sector ask for ${missing.slice(0, 2).join(" and ")}, which your course did not cover. A short module would close that gap.`,
-          cta: { label: "See recommendations", href: "trainee.html#skills" }
-        });
-      }
-    }
-
-    if (!P.altPhone) {
+    Object.keys(P.follow).forEach((w) => {
+      if (P.follow[w] !== "no-response") return;
       out.push({
-        kind: "missing", unread: true, action: true, at: "2026-08-02",
-        title: "Add an alternate contact number",
-        body: "Most records go cold because a number changed. A second contact keeps you reachable for two years.",
-        cta: { label: "Update contact details", href: "trainee.html#contact" }
+        kind: "followup", unread: true, action: true, at: addMonths(P.certDate, parseInt(w, 10)),
+        title: `Your ${waves[w]} employment follow-up is due`,
+        body: "Update your current status. It takes about a minute.",
+        cta: { label: "Update now", href: "outcome.html" }
+      });
+    });
+
+    out.push({ 1: {
+        kind: "certification", unread: false, action: false, at: P.certDate,
+        title: "Your certificate has been verified",
+        body: `${P.certId} for ${P.course}. You now receive job recommendations.`,
+        cta: { label: "See jobs", href: "trainee.html" } },
+      0: {
+        kind: "certification", unread: true, action: false, at: P.journey[0].date,
+        title: "Your certificate is awaiting verification",
+        body: `The mission office is checking ${P.certId}. Job recommendations start once it is verified.` },
+      "-1": {
+        kind: "alert", unread: true, action: true, at: P.journey[0].date,
+        title: "Your certificate could not be verified",
+        body: `${P.certId} did not match the issuing body's records. Contact the mission office.` }
+    }[P.certStatus]);
+
+    (P.applications || []).forEach((a) => out.push({
+      kind: "employment", unread: a.stage !== "screened_out", action: false, at: a.created,
+      title: `${a.title} at ${a.company}`,
+      body: `Application update: ${STAGE[a.stage]}.` + (a.missing.length ? ` Missing skills: ${a.missing.join(", ")}.` : ""),
+      cta: { label: "My applications", href: "trainee.html" }
+    }));
+
+    if (P.outcomeReported && P.verified) {
+      out.push({
+        kind: "employment", unread: false, action: false, at: P.outcomeUpdated,
+        title: `${P.employer} confirmed your employment record`,
+        body: "Your placement is now marked verified."
       });
     }
-
     return out;
   }
 
   function employerNotices() {
-    const pending = DB.VERIFY_REQUESTS.filter((v) => v.status === "pending");
-    const out = pending.map((v) => ({
+    const out = DB.VERIFY_REQUESTS.filter((v) => v.status === "pending").map((v) => ({
       kind: "verification", unread: true, action: true, at: v.raised,
-      title: `Verify ${v.trainee} — ${v.role}`,
-      body: `Claimed joining ${date(v.since)} at ${inr(v.salary)}/month. Confirm, correct or dispute.`,
+      title: `Verify ${v.trainee}`,
+      body: `Says they work at your company${v.salary ? " at " + inr(v.salary) + "/month" : ""}. Confirm or dispute.`,
       cta: { label: "Review request", href: "employer.html#verify" }
     }));
 
-    const disputed = DB.VERIFY_REQUESTS.filter((v) => v.status === "disputed");
-    disputed.forEach((v) => out.push({
-      kind: "alert", unread: true, action: true, at: v.raised,
+    DB.VERIFY_REQUESTS.filter((v) => v.status === "disputed").forEach((v) => out.push({
+      kind: "alert", unread: false, action: false, at: v.raised,
       title: `Disputed record — ${v.trainee}`,
-      body: "You marked this record as disputed. The mission office has been notified and will reconcile it.",
+      body: "You disputed this record. The mission office will reconcile it.",
       cta: { label: "Open portal", href: "employer.html#verify" }
     }));
 
-    const open = DB.JOB_POSTINGS.filter((j) => j.status === "open");
-    open.forEach((j) => out.push({
-      kind: "employment", unread: false, action: false, at: j.posted,
-      title: `${j.applicants} candidates matched "${j.title}"`,
-      body: `${j.openings} openings in ${j.district}. Certified trainees matching your skills are ready to contact.`,
-      cta: { label: "View candidates", href: "employer.html#openings" }
-    }));
+    const E = DB.EMPLOYER_USER;
+    if (E && !E.verified) {
+      out.push({
+        kind: "alert", unread: true, action: false, at: E.onboarded,
+        title: "Company verification pending",
+        body: `The mission office is checking GSTIN ${E.gstin}. Your jobs are shown to trainees after that.`
+      });
+    }
 
+    DB.JOB_POSTINGS.filter((j) => j.status === "open").forEach((j) => out.push({
+      kind: "employment", unread: false, action: false, at: j.posted,
+      title: `${j.applicants} application${j.applicants === 1 ? "" : "s"} for "${j.title}"`,
+      body: `${j.openings} opening(s) in ${j.district}.`,
+      cta: { label: "View applicants", href: "employer.html#openings" }
+    }));
     return out;
   }
 
   function adminNotices() {
     const open = DB.VALIDATION_QUEUE;
-    const critical = open.filter((f) => f.severity === "critical");
-
-    const out = critical.map((f) => ({
-      kind: "alert", unread: true, action: true, at: f.raised,
-      title: `${f.type} — needs review`,
-      body: `${f.detail} Subject: ${f.subject}.`,
+    const out = open.map((f) => ({
+      kind: f.severity === "critical" ? "alert" : "verification", unread: true, action: true, at: f.raised,
+      title: `${f.type} — ${f.subject}`,
+      body: f.detail,
       cta: { label: "Open validation queue", href: "admin.html#validation" }
     }));
-
-    out.push({
-      kind: "alert", unread: true, action: true, at: "2026-09-14",
-      title: `${open.length} records flagged for manual review`,
-      body: "The rule engine does not resolve these automatically — uncertain data is held for a human rather than treated as true.",
-      cta: { label: "Review queue", href: "admin.html#validation" }
-    });
-
-    DB.CAMPAIGNS.filter((c) => c.status === "running").forEach((c) => {
-      const rate = c.sent ? (c.responded / c.sent) * 100 : 0;
-      out.push({
-        kind: "followup", unread: rate < 70, action: rate < 70, at: c.started,
-        title: `${c.name} — ${rate.toFixed(0)}% response`,
-        body: `${c.responded.toLocaleString("en-IN")} of ${c.sent.toLocaleString("en-IN")} contacted via ${c.channel}.`
-          + (rate < 70 ? " Below the 70% threshold — consider an assisted-call wave." : ""),
-        cta: { label: "Open campaigns", href: "admin.html#followups" }
-      });
-    });
-
-    const weakest = DB.breakdown(DB.trainees, "provider")
-      .slice()
-      .sort((a, b) => a.placementRate - b.placementRate)[0];
-    if (weakest) {
-      out.push({
-        kind: "alert", unread: false, action: false, at: "2026-09-11",
-        title: `Provider review due — ${weakest.key}`,
-        body: `Placement rate ${weakest.placementRate.toFixed(1)}% across ${weakest.total.toLocaleString("en-IN")} trainees, the lowest in the programme.`,
-        cta: { label: "Provider performance", href: "admin.html#providers" }
-      });
-    }
-
     return out;
   }
 
   const SOURCES = { trainee: traineeNotices, employer: employerNotices, admin: adminNotices };
 
   /* ---------- state ---------- */
-  let role = "trainee";
+  const role = DB.USER.role;
   let filter = "all";
   let kind = "all";
   let notices = [];
@@ -191,10 +148,10 @@
     const followups = notices.filter((n) => n.kind === "followup" && n.action).length;
 
     const tiles = [
-      { label: "Unread", value: unread, meta: "since your last visit", accent: "var(--series-1)" },
+      { label: "Unread", value: unread, meta: "not yet marked read", accent: "var(--series-1)" },
       { label: "Needs action", value: action, meta: "waiting on you", accent: "var(--series-2)" },
       { label: "Follow-ups due", value: followups, meta: "answer to stay verified", accent: "var(--series-4)" },
-      { label: "Total", value: notices.length, meta: "last 90 days", accent: "var(--series-7)" }
+      { label: "Total", value: notices.length, meta: "from your records", accent: "var(--series-7)" }
     ];
 
     $("#noticeStats").innerHTML = tiles.map((t) => `
@@ -209,7 +166,7 @@
     renderStats();
     const rows = visible();
     $("#inboxSub").textContent =
-      `${rows.length} of ${notices.length} · viewing as ${role}`;
+      `${rows.length} of ${notices.length}`;
 
     if (!rows.length) {
       $("#noticeList").innerHTML = `
@@ -271,7 +228,6 @@
     render();
   });
 
-  $("#roleView").addEventListener("change", (e) => { role = e.target.value; load(); });
   $("#kindFilter").addEventListener("change", (e) => { kind = e.target.value; render(); });
 
   $("#exportNotices").addEventListener("click", () => {
@@ -284,7 +240,7 @@
 
   $$("[data-pref]").forEach((el) =>
     el.addEventListener("change", () =>
-      toast(el.dataset.pref + (el.checked ? " enabled" : " disabled"))));
+      toast("Delivery preferences are not saved yet", "warn")));
 
   load();
 })();

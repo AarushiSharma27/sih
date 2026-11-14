@@ -738,3 +738,6 @@ table.tbl tbody tr:last-child td { border-bottom: 0; }
   .content { padding: 0; }
   .card { box-shadow: none; break-inside: avoid; }
 }
+
+/* the hidden attribute must win over component display rules */
+[hidden] { display: none !important; }

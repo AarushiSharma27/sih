@@ -29,6 +29,28 @@
         <div class="stack">
 
           <div class="card">
+            <div class="card__head"><div><h3>Recommended jobs</h3>
+              <div class="card__sub">Open roles at verified companies, ranked by how many required skills your certified course covers</div></div></div>
+            <div class="card__body" id="jobs"></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><div><h3>My applications</h3>
+              <div class="card__sub">Resume screening passes when at least half the job's required skills appear in your resume</div></div></div>
+            <div class="card__body" id="apps"></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><div><h3>Resume</h3>
+              <div class="card__sub">Screened against each job's required skills when you apply. Paste text or load a .txt file.</div></div></div>
+            <div class="card__body stack">
+              <textarea class="input" id="resume" rows="8" aria-label="Resume text" placeholder="Paste your resume here (skills, experience, projects)…"></textarea>
+              <div class="row"><input type="file" id="resumeFile" accept=".txt,text/plain" aria-label="Load resume from .txt file">
+                <span class="topbar__spacer"></span><button class="btn btn--primary" id="saveResume">Save resume</button></div>
+            </div>
+          </div>
+
+          <div class="card">
             <div class="card__head">
               <div><h3>Training-to-livelihood journey</h3>
                 <div class="card__sub">Every stage is timestamped and linked to the unique ID</div></div>
@@ -84,7 +106,7 @@
               <div class="card__sub">You control what is tracked. Revocable at any time.</div></div></div>
             <div class="card__body stack" id="consentBox" style="gap:14px"></div>
             <div class="card__foot">
-              <span>Consent ID CNS-2025-03102 · granted 12 Jan 2025 · valid 24 months</span>
+              <span id="consentFoot"></span>
             </div>
           </div>
 
@@ -114,6 +136,7 @@
 
 <script src="assets/js/data.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/api.js"></script>
 <script src="assets/js/charts.js"></script>
 <script src="assets/js/trainee.js"></script>
 </body>

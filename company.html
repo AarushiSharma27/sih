@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register your company · SkillTrack</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+</head>
+<body>
+<div class="landing">
+  <header class="landing__nav">
+    <a class="sidebar__mark" href="index.html" style="text-decoration:none">ST</a>
+    <div><strong>SkillTrack</strong><div class="small muted">Madhya Pradesh State Skill Development Mission</div></div>
+    <div class="topbar__spacer"></div>
+    <a class="btn btn--sm" href="login.html">Sign in</a>
+  </header>
+  <section class="shell-narrow" style="padding:38px 28px 56px">
+    <div style="text-align:center;margin-bottom:22px">
+      <span class="chip chip--brand">For employers</span>
+      <h1 style="font-size:28px;margin:12px 0 8px">Register your company</h1>
+      <p class="muted" style="max-width:540px;margin:0 auto;font-size:14px;line-height:1.6">
+        Post jobs with the skills you need. We recommend them to trainees whose verified certificate
+        covers those skills, screen their resumes against your job description, and show you only those who pass.</p>
+    </div>
+    <form id="f" class="card" novalidate>
+      <div class="card__body form-grid">
+        <div class="field"><label for="company">Registered company name</label><input class="input" id="company"></div>
+        <div class="field"><label for="gstin">GSTIN</label><input class="input" id="gstin" maxlength="15" style="text-transform:uppercase">
+          <span class="hint">Checked by the mission office on the GST portal. Your jobs go live after that.</span></div>
+        <div class="field"><label for="district">District</label><select class="select" id="district"></select></div>
+        <div class="field"><label for="website">Website <span class="muted">(optional)</span></label><input class="input" id="website" placeholder="https://"></div>
+        <div class="field"><label for="name">Your name</label><input class="input" id="name" autocomplete="name"></div>
+        <div class="field"><label for="email">Work email</label><input class="input" type="email" id="email" autocomplete="username"></div>
+        <div class="field"><label for="password">Password</label><input class="input" type="password" id="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
+      </div>
+      <div class="card__body"><div class="banner banner--critical" id="err" hidden><span class="banner__ico">!</span><div id="errText"></div></div></div>
+      <div class="card__foot"><span class="topbar__spacer"></span><button class="btn btn--primary" id="go">Register company</button></div>
+    </form>
+  </section>
+</div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+const { $, esc } = UI;
+$("#district").innerHTML = DB.DISTRICTS.map((d) => `<option>${esc(d.name)}</option>`).join("");
+$("#f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const v = (id) => $("#" + id).value.trim();
+  $("#go").disabled = true;
+  const r = await API.post("/api/auth/register/employer", { company: v("company"), gstin: v("gstin").toUpperCase(),
+    district: v("district"), website: v("website"), name: v("name"), email: v("email"), password: $("#password").value });
+  if (r.ok) { location.href = "employer.html"; return; }
+  $("#errText").textContent = r.error; $("#err").hidden = false; $("#go").disabled = false;
+});
+</script>
+</body>
+</html>

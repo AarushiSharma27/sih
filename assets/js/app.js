@@ -73,18 +73,22 @@
     { group: "Portals", items: [
       { id: "trainee",  label: "Trainee profile",  icon: "◉", href: "trainee.html" },
       { id: "outcome",  label: "Update outcome",   icon: "✎", href: "outcome.html" },
-      { id: "employer", label: "Employer portal",  icon: "▤", href: "employer.html", badge: "3" },
+      { id: "employer", label: "Employer portal",  icon: "▤", href: "employer.html" },
       { id: "admin",    label: "Admin console",    icon: "⚙", href: "admin.html",    badge: "7" }
     ]},
     { group: "Operations", items: [
       { id: "followup",      label: "Follow-up engine", icon: "↻", href: "admin.html#followups" },
       { id: "validation",    label: "Data validation",  icon: "✓", href: "admin.html#validation" },
       { id: "providers",     label: "Providers",        icon: "⌂", href: "admin.html#providers" },
-      { id: "notifications", label: "Notifications",    icon: "◇", href: "notifications.html", badge: "5" }
+      { id: "notifications", label: "Notifications",    icon: "◇", href: "notifications.html" }
     ]}
   ];
 
   function renderShell(opts) {
+    // the topbar always shows whoever is actually signed in
+    if (opts && global.DB && DB.USER) {
+      opts.user = { name: DB.USER.name, role: { admin: "Administrator", employer: "Employer", trainee: "Trainee" }[DB.USER.role] };
+    }
     const page = document.body.dataset.page;
     const sidebar = $(".sidebar");
     if (sidebar) {
@@ -103,11 +107,28 @@
              </a>`).join("")).join("") +
         `</nav>
          <div class="sidebar__foot">
-           <a href="login.html" style="color:inherit">Switch role / sign out</a>
+           <a href="login.html" id="signOut" style="color:inherit">Sign out</a>
            <div style="margin-top:6px">Consent-based tracking · DPDP Act 2023</div>
-           <div style="margin-top:4px;opacity:.75">Build 2.4.0 · Demo data</div>
+           
          </div>`;
     }
+
+    const so = $("#signOut");
+    if (so) so.addEventListener("click", (e) => {
+      e.preventDefault();
+      fetch("/api/auth/logout", { method: "POST" }).finally(() => { location.href = "login.html"; });
+    });
+    // only show the workspaces the signed-in role can open
+    const role = global.DB && DB.USER && DB.USER.role;
+    const ALLOWED = { admin: ["dashboard", "gaps", "reasons", "cohort", "insights", "reports", "admin", "followup", "validation", "providers", "notifications"],
+                      employer: ["employer", "notifications"], trainee: ["trainee", "outcome", "notifications"] };
+    if (role && sidebar) $$(".nav__item", sidebar).forEach((a) => {
+      const id = NAV.flatMap((g) => g.items).find((i) => i.href === a.getAttribute("href")).id;
+      if (!ALLOWED[role].includes(id)) a.remove();
+    });
+    if (sidebar) $$(".nav__label", sidebar).forEach((l) => {
+      if (!l.nextElementSibling || l.nextElementSibling.classList.contains("nav__label")) l.remove();
+    });
 
     const topbar = $(".topbar");
     if (topbar && opts) {

@@ -29,7 +29,10 @@
       const body = res.status === 204 ? null : await res.json().catch(() => null);
       if (!res.ok) {
         // FastAPI puts the human-readable message in `detail`.
-        const msg = body && body.detail ? body.detail : `Request failed (${res.status})`;
+        const d = body && body.detail;
+        // pydantic validation errors arrive as a list of {loc, msg}
+        const msg = Array.isArray(d) ? d.map((e) => e.loc[e.loc.length - 1] + ": " + e.msg).join("; ")
+          : d || `Request failed (${res.status})`;
         return { ok: false, status: res.status, error: msg };
       }
       return { ok: true, status: res.status, data: body };
@@ -49,7 +52,7 @@
   function available() {
     if (!probe) {
       probe = BASE
-        ? request("/api/health").then((r) => r.ok)
+        ? request("/api/meta").then((r) => r.ok)
         : Promise.resolve(false);
     }
     return probe;
@@ -69,14 +72,22 @@
     return s ? "?" + s : "";
   }
 
+  const put = (path, body) => request(path, { method: "PUT", body: JSON.stringify(body || {}) });
+
   global.API = {
-    available, get, post, qs,
-    health:        ()            => get("/api/health"),
-    summary:       (f)           => get("/api/analytics/summary" + qs(f)),
-    breakdown:     (dim, f)      => get("/api/analytics/breakdown/" + dim + qs(f)),
-    insights:      (f)           => get("/api/analytics/roi" + qs(f)),
-    submitSurvey:  (id, answer)  => post(`/api/portal/${encodeURIComponent(id)}/survey`, answer),
-    decideVerify:  (id, verdict) => post(`/api/employers/verifications/${encodeURIComponent(id)}`, verdict),
-    resolveFlag:   (id, body)    => post(`/api/admin/validation-queue/${encodeURIComponent(id)}`, body)
+    available, get, post, put, qs,
+    health:        ()            => get("/api/meta"),
+    logout:        ()            => post("/api/auth/logout"),
+    saveOutcome:   (body)        => put("/api/trainee/outcome", body),
+    saveResume:    (text)        => put("/api/trainee/resume", { text }),
+    recommended:   ()            => get("/api/trainee/jobs"),
+    apply:         (jobId)       => post(`/api/trainee/jobs/${jobId}/apply`),
+    postJob:       (body)        => post("/api/employer/jobs", body),
+    applicants:    (jobId)       => get(`/api/employer/jobs/${jobId}/applicants`),
+    decide:        (appId, body) => post(`/api/employer/applications/${appId}`, body),
+    decideClaim:   (uid, ok)     => post(`/api/employer/claims/${uid}`, { verified: ok }),
+    verifyCompany: (id, ok)      => post(`/api/admin/companies/${id}`, { verified: ok }),
+    verifyCert:    (uid, ok, note) => post(`/api/admin/trainees/${uid}/certificate`, { verified: ok, note }),
+    addCourse:     (body)        => post("/api/admin/courses", body)
   };
 })(window);

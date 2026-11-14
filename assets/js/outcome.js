@@ -15,8 +15,7 @@
   const { $, $$, esc, toast, avatar } = UI;
 
   /* ---------- who is updating ---------- */
-  const params = UI.readParams();
-  const P = (params.id && DB.trainees.find((t) => t.id === params.id)) || DB.TRAINEE_USER;
+  const P = DB.TRAINEE_USER;
 
   UI.renderShell({
     title: "Update your outcome",
@@ -26,10 +25,10 @@
 
   $("#ctxAvatar").innerHTML = avatar(P.name, "avatar--lg");
   $("#ctxName").textContent = P.name;
-  $("#ctxMeta").textContent = `${P.id} · ${P.course} · ${P.provider}`;
-  if (!P.certified) {
+  $("#ctxMeta").textContent = `${P.id} · ${P.course} · certificate ${P.certId}`;
+  if (P.certStatus !== 1) {
     $("#ctxCert").className = "chip chip--warning";
-    $("#ctxCert").textContent = "Not certified";
+    $("#ctxCert").textContent = P.certStatus === 0 ? "Certificate pending verification" : "Certificate not verified";
   }
 
   /* ---------- the four branches ---------- */
@@ -62,7 +61,7 @@
   $("#employerList").innerHTML = employerOptions;
   $("#employerList2").innerHTML = employerOptions;
 
-  // Skills the trainee's own course teaches — the realistic set for "what do you use".
+  // Skills the trainee's own course teaches (from its published qualification pack).
   const gapRow = DB.SKILL_GAPS.find((g) => g.course === P.course);
   const taught = gapRow ? gapRow.taught : [];
   $("#self_skills").innerHTML = taught.length
@@ -220,33 +219,17 @@
     btn.textContent = "Submitting…";
 
     const payload = collect(chosen);
-
-    // The backend records this against the trainee's current follow-up wave when
-    // it is reachable; otherwise the flow completes locally so the demo still runs.
-    let synced = false;
-    if (await API.available()) {
-      const wave = dueWave(P);
-      if (wave) {
-        const res = await API.submitSurvey(P.id, {
-          wave,
-          stillEmployed: chosen === "employed" || chosen === "apprentice",
-          currentSalary: payload.salary || null,
-          relevance: payload.relevance || null
-        });
-        synced = res.ok;
-        if (!res.ok && !res.offline) toast(res.error, "warn");
-      }
+    const res = await API.saveOutcome(payload);
+    if (!res.ok) {
+      toast(res.error, "bad");
+      btn.disabled = false;
+      btn.textContent = "Submit update";
+      return;
     }
-
-    try {
-      sessionStorage.setItem("skilltrack-outcome", JSON.stringify({ id: P.id, ...payload }));
-    } catch (err) { /* private mode */ }
-
-    await new Promise((r) => setTimeout(r, 420));
 
     $("#outcomeForm").hidden = true;
     $("#contextCard").hidden = true;
-    $("#doneMessage").textContent = MESSAGES[chosen] + (synced ? " Saved to the outcome register." : "");
+    $("#doneMessage").textContent = MESSAGES[chosen] + " Saved to your record.";
     $("#outcomeDone").hidden = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
     toast("Outcome recorded");
@@ -254,55 +237,36 @@
 
   const MESSAGES = {
     employed:
-      "We have asked your employer to confirm the record. Once they do, it is marked "
-      + "verified. We will check in at your next follow-up to see how things are going.",
+      "If your employer is registered on SkillTrack they can confirm this record, and it "
+      + "is then marked verified. Until then it counts as self-reported.",
     self:
-      "Self-employment is tracked the same way as a job. We will ask about your income "
-      + "and whether the business is still running at your next follow-up.",
+      "Self-employment is tracked the same way as a job. Update this page whenever your "
+      + "situation changes.",
     apprentice:
-      "We will check back when your apprenticeship ends to see whether it converted into "
-      + "a permanent role — that conversion rate is one of the programme's key measures.",
+      "Update this page when your apprenticeship ends, so we can see whether it became a "
+      + "permanent role.",
     notplaced:
-      "Thank you for telling us. Your reason goes into the non-placement analysis, and a "
-      + "placement officer in your district will be in touch about what would help."
+      "Thank you for telling us. Your reason goes into the non-placement analysis on the "
+      + "programme dashboard."
   };
 
-  /** The earliest wave that is due but not yet answered. */
-  function dueWave(t) {
-    const follow = t.follow || {};
-    return ["3m", "6m", "12m", "24m"]
-      .find((w) => follow[w] && follow[w] !== "scheduled") || null;
-  }
-
+  /** The fields the outcome register stores. shortcut: role, dates, type and self-employment
+      details are asked but not stored yet; add columns to `trainees` when they are needed. */
   function collect(branch) {
     const val = (id) => ($("#" + id) ? $("#" + id).value.trim() : "");
     if (branch === "employed") {
-      return {
-        outcome: "employed", company: val("emp_company"), role: val("emp_role"),
-        industry: val("emp_industry"), location: val("emp_location"),
-        joined: val("emp_joined"), salary: Number(val("emp_salary")),
-        type: val("emp_type"), relevance: Number(val("emp_relevance"))
-      };
+      return { outcome: "employed", employer_name: val("emp_company"), salary: Number(val("emp_salary")),
+               relevance: Number(val("emp_relevance")) || null };
     }
     if (branch === "self") {
-      return {
-        outcome: "self", type: val("self_type"), name: val("self_name"),
-        location: val("self_location"), started: val("self_started"),
-        income: val("self_income"), employees: val("self_employees"),
-        skills: $$("#self_skills input:checked").map((i) => i.value)
-      };
+      return { outcome: "self", employer_name: val("self_name") || null, salary: null, relevance: null };
     }
     if (branch === "apprentice") {
-      return {
-        outcome: "apprentice", org: val("app_org"), role: val("app_role"),
-        started: val("app_started"), duration: val("app_duration"),
-        salary: Number(val("app_stipend")), converts: val("app_convert")
-      };
+      return { outcome: "apprentice", employer_name: val("app_org"), salary: Number(val("app_stipend")), relevance: null };
     }
-    return {
-      outcome: "notplaced", reason: val("np_reason"), other: val("np_other"),
-      looking: val("np_looking"), help: val("np_help")
-    };
+    // RELOC is folded into PERSONAL ("Personal / relocation issues") in the reason taxonomy
+    const reason = val("np_reason") === "RELOC" ? "PERSONAL" : val("np_reason");
+    return { outcome: "notplaced", reason };
   }
 
   UI.initDemoActions();

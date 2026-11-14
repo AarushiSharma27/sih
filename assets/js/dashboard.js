@@ -7,10 +7,18 @@
 
   UI.renderShell({
     title: "Outcome dashboard",
-    crumb: "Analytics · Madhya Pradesh · updated 17 Sep 2026, 09:12 IST",
+    crumb: "Analytics · Madhya Pradesh · live data",
     user: DB.ADMIN_USER
   });
   UI.initDemoActions();
+
+  /* Replace a chart node with an empty state. A fresh clone drops the old chart's resize redraw. */
+  function emptyChart(id, msg) {
+    const old = $(id), fresh = old.cloneNode(false);
+    old.replaceWith(fresh);
+    fresh.innerHTML = `<div class="empty"><div class="empty__title">${esc(msg)}</div></div>`;
+  }
+  const NO_DATA = "No trainee data in this scope yet";
 
   /* ---------- filter state ---------- */
   const params = UI.readParams();
@@ -72,7 +80,28 @@
   });
 
   /* ---------- derived data, recomputed each render ---------- */
-  let rows = [], sum = {}, baseline = DB.summarise(DB.trainees);
+  let rows = [], sum = {}, baseline = {};
+
+  // Rates use only trainees who reported an outcome; unreported ones are not "not placed".
+  function kpis(list) {
+    const rep = list.filter((t) => t.outcomeReported);
+    const s = DB.summarise(rep);
+    const rel = rep.filter((t) => t.relevance > 0);
+    const ret = rep.filter((t) => t.retained12m != null);
+    const has = rep.length > 0;
+    return Object.assign(s, {
+      total: list.length, reported: rep.length,
+      consentRate: list.length ? (list.filter((t) => t.consent).length / list.length) * 100 : null,
+      employmentRate: has ? s.employmentRate : null, selfRate: has ? s.selfRate : null,
+      apprenticeRate: has ? s.apprenticeRate : null, notPlacedRate: has ? s.notPlacedRate : null,
+      placementRate: has ? s.placementRate : null,
+      avgStartingSalary: s.avgStartingSalary || null,
+      verifiedPlacements: rep.filter((t) => t.verified).length,
+      retention12m: ret.length ? (ret.filter((t) => t.retained12m).length / ret.length) * 100 : null,
+      relevance: rel.length ? (rel.reduce((a, t) => a + t.relevance, 0) / rel.length / 5) * 100 : null
+    });
+  }
+  const show = (v, f) => (v == null ? "—" : f(v));
 
   function scopeRows() { return DB.filterTrainees({
     course: state.course, district: state.district, batch: state.batch,
@@ -84,26 +113,26 @@
                      state.batch !== "all" || state.provider !== "all" || state.gender !== "all";
     const tiles = [
       { label: "Total trainees",    value: num(sum.total), base: null, accent: "var(--series-7)",
-        meta: `${pct(sum.consentRate, 1)} with active consent` },
-      { label: "Employment rate",   value: pct(sum.employmentRate, 0), base: baseline.employmentRate, cur: sum.employmentRate,
+        meta: `${num(sum.reported)} have reported an outcome` },
+      { label: "Employment rate",   value: show(sum.employmentRate, (v) => pct(v, 0)), base: baseline.employmentRate, cur: sum.employmentRate,
         accent: "var(--series-1)", meta: `${num(sum.counts.employed)} in wage employment` },
-      { label: "Self-employed",     value: pct(sum.selfRate, 0), base: baseline.selfRate, cur: sum.selfRate,
+      { label: "Self-employed",     value: show(sum.selfRate, (v) => pct(v, 0)), base: baseline.selfRate, cur: sum.selfRate,
         accent: "var(--series-3)", meta: `${num(sum.counts.self)} running own work` },
-      { label: "Apprenticeship",    value: pct(sum.apprenticeRate, 0), base: baseline.apprenticeRate, cur: sum.apprenticeRate,
+      { label: "Apprenticeship",    value: show(sum.apprenticeRate, (v) => pct(v, 0)), base: baseline.apprenticeRate, cur: sum.apprenticeRate,
         accent: "var(--series-4)", meta: `${num(sum.counts.apprentice)} in apprenticeships` },
-      { label: "Not placed",        value: pct(sum.notPlacedRate, 0), base: baseline.notPlacedRate, cur: sum.notPlacedRate, invert: true,
-        accent: "var(--series-8)", meta: `${num(sum.counts.notplaced)} awaiting an outcome` },
-      { label: "Avg. starting salary", value: inr(sum.avgStartingSalary), base: baseline.avgStartingSalary, cur: sum.avgStartingSalary, money: true,
-        accent: "var(--series-1)", meta: `+${inr(sum.avgWageGrowth)} avg. growth since` },
-      { label: "12-month retention", value: pct(sum.retention12m, 0), base: baseline.retention12m, cur: sum.retention12m,
-        accent: "var(--series-3)", meta: "of those placed 12+ months ago" },
-      { label: "Training relevance", value: pct(sum.relevance, 0), base: baseline.relevance, cur: sum.relevance,
+      { label: "Not placed",        value: show(sum.notPlacedRate, (v) => pct(v, 0)), base: baseline.notPlacedRate, cur: sum.notPlacedRate, invert: true,
+        accent: "var(--series-8)", meta: `${num(sum.counts.notplaced)} reported not working` },
+      { label: "Avg. monthly income", value: show(sum.avgStartingSalary, inr), base: baseline.avgStartingSalary, cur: sum.avgStartingSalary, money: true,
+        accent: "var(--series-1)", meta: `${num(sum.verifiedPlacements)} placements verified by employers` },
+      { label: "12-month retention", value: show(sum.retention12m, (v) => pct(v, 0)), base: baseline.retention12m, cur: sum.retention12m,
+        accent: "var(--series-3)", meta: sum.retention12m == null ? "not collected yet" : "of those placed 12+ months ago" },
+      { label: "Training relevance", value: show(sum.relevance, (v) => pct(v, 0)), base: baseline.relevance, cur: sum.relevance,
         accent: "var(--series-7)", meta: "self-rated fit of training to work" }
     ];
 
     $("#kpiGrid").innerHTML = tiles.map((t) => {
       let delta = "";
-      if (filtered && t.base != null) {
+      if (filtered && t.base != null && t.cur != null) {
         const d = t.cur - t.base;
         const good = t.invert ? d < 0 : d > 0;
         const shown = t.money ? inr(Math.abs(d)) : Math.abs(d).toFixed(1) + " pp";
@@ -125,13 +154,16 @@
     if (state.gender   !== "all") bits.push({ F: "women", M: "men", O: "other genders" }[state.gender]);
     $("#scopeText").textContent = bits.length
       ? ` ${num(sum.total)} trainees — ${bits.join(" · ")}. Deltas compare against the full ${num(baseline.total)}-trainee cohort.`
-      : ` All ${num(sum.total)} trainees across 5 batches, 10 courses, 6 providers and 8 districts.`;
+      : ` All ${num(sum.total)} registered trainees across ${num(new Set(rows.map((t) => t.batch)).size)} batches, ` +
+        `${num(new Set(rows.map((t) => t.course)).size)} courses and ${num(new Set(rows.map((t) => t.district)).size)} districts. ` +
+        `Rates are over the ${num(sum.reported)} who reported an outcome.`;
   }
 
   /* ---------- outcome mix by batch (stacked) ---------- */
   function renderMix() {
+    if (!rows.length) { emptyChart("#chartMix", NO_DATA); $("#legendMix").innerHTML = ""; return; }
     const byBatch = DB.BATCHES.map((b) => {
-      const g = rows.filter((t) => t.batch === b.id);
+      const g = rows.filter((t) => t.batch === b.id && t.outcomeReported);
       const s = DB.summarise(g);
       return { label: b.id, parts: [
         { name: "Employed",       value: s.counts.employed,   color: "var(--series-1)" },
@@ -148,6 +180,7 @@
 
   /* ---------- donut ---------- */
   function renderDonut() {
+    if (!sum.reported) { emptyChart("#chartDonut", "No outcomes reported in this scope yet"); $("#legendDonut").innerHTML = ""; return; }
     const items = [
       { label: "Employed",       value: sum.counts.employed,   color: "var(--series-1)" },
       { label: "Self-employed",  value: sum.counts.self,       color: "var(--series-3)" },
@@ -159,33 +192,20 @@
       centerValue: pct(sum.placementRate, 0), centerLabel: "placed in some form"
     });
     Viz.legend($("#legendDonut"), items.map((i) => ({
-      label: i.label, color: i.color, value: pct((i.value / (sum.total || 1)) * 100, 1)
+      label: i.label, color: i.color, value: pct((i.value / sum.reported) * 100, 1)
     })));
   }
 
   /* ---------- wage progression ---------- */
   function renderWage() {
-    const prog = DB.wageProgression(rows);
-    const women = DB.wageProgression(rows.filter((t) => t.gender === "F"));
-    const men   = DB.wageProgression(rows.filter((t) => t.gender === "M"));
-    Viz.line($("#chartWage"), {
-      xLabels: prog.map((p) => p.label),
-      series: [
-        { name: "All trainees", color: "var(--series-1)", values: prog.map((p) => p.value) },
-        { name: "Women",        color: "var(--series-5)", values: women.map((p) => p.value) },
-        { name: "Men",          color: "var(--series-3)", values: men.map((p) => p.value) }
-      ],
-      height: 250, area: false, format: inr, tickFormat: inrK, padLeft: 56
-    });
-    Viz.legend($("#legendWage"), [
-      { label: "All trainees", color: "var(--series-1)" },
-      { label: "Women",        color: "var(--series-5)" },
-      { label: "Men",          color: "var(--series-3)" }
-    ]);
+    // Only one salary per trainee is stored (no history), so a progression curve would be invented.
+    emptyChart("#chartWage", "Wage progression needs repeated salary reports — only the latest income is collected so far");
+    $("#legendWage").innerHTML = "";
   }
 
   /* ---------- provider comparison ---------- */
   function renderProviders() {
+    if (!DB.PROVIDERS.length) { emptyChart("#chartProvider", "Training provider is not recorded at registration yet"); return; }
     const byProv = DB.breakdown(rows, "provider");
     const metric = {
       placement: { get: (p) => p.placementRate,     fmt: (v) => pct(v, 1), name: "Placement rate", color: "var(--series-1)" },
@@ -208,6 +228,7 @@
 
   /* ---------- follow-up waves ---------- */
   function renderFollow() {
+    if (!rows.length) { emptyChart("#chartFollow", NO_DATA); $("#legendFollow").innerHTML = ""; return; }
     const waves = DB.followUpWaves(rows);
     const groups = waves.map((w) => ({
       label: w.wave,
@@ -224,16 +245,17 @@
 
   /* ---------- district heat strip ---------- */
   function renderDistricts() {
-    const byDist = DB.breakdown(rows, "district").slice(0, 8);
+    const byDist = DB.breakdown(rows.filter((t) => t.outcomeReported), "district").slice(0, 8);
+    if (!byDist.length) { emptyChart("#chartDistrict", "No outcomes reported in this scope yet"); return; }
     Viz.heatstrip($("#chartDistrict"), {
-      colLabels: ["Employed", "Self-emp.", "Retention"],
+      colLabels: ["Employed", "Self-emp.", "Placed"],
       labelWidth: 96,
       rows: byDist.map((d) => ({
         label: d.key,
         cells: [
           { label: "Employment rate", value: d.employmentRate },
           { label: "Self-employment", value: d.selfRate },
-          { label: "12-month retention", value: d.retention12m }
+          { label: "Placement rate", value: d.placementRate }
         ]
       })),
       cellText: (c) => Math.round(c.value) + "%",
@@ -243,9 +265,11 @@
 
   /* ---------- demographics ---------- */
   function renderDemographics() {
+    const rep = rows.filter((t) => t.outcomeReported);
+    if (!rep.length) { emptyChart("#chartDemo", "No outcomes reported in this scope yet"); $("#demoNotes").innerHTML = ""; return; }
     const bands = [[18, 21], [22, 25], [26, 29], [30, 34]];
     const items = bands.map((b) => {
-      const g = rows.filter((t) => t.age >= b[0] && t.age <= b[1]);
+      const g = rep.filter((t) => t.age >= b[0] && t.age <= b[1]);
       const s = DB.summarise(g);
       return { label: b[0] + "–" + b[1], value: Math.round(s.placementRate), note: num(g.length), noteLabel: "Trainees", color: "var(--series-1)" };
     });
@@ -254,23 +278,25 @@
       valueName: "Placement rate", format: (v) => v + "%", tickFormat: (v) => Math.round(v) + "%"
     });
 
-    const women = DB.summarise(rows.filter((t) => t.gender === "F"));
-    const men   = DB.summarise(rows.filter((t) => t.gender === "M"));
+    const women = DB.summarise(rep.filter((t) => t.gender === "F"));
+    const men   = DB.summarise(rep.filter((t) => t.gender === "M"));
     $("#demoNotes").innerHTML = [
       { l: "Women — placement", v: women.placementRate, n: women.total, c: "var(--series-5)" },
       { l: "Men — placement",   v: men.placementRate,   n: men.total,   c: "var(--series-3)" }
     ].map((r) => `
       <div class="meter-row" style="--accent:${r.c}">
         <span class="meter-row__label">${r.l} <span class="muted">(${num(r.n)})</span></span>
-        <span class="meter-row__val">${pct(r.v, 1)}</span>
-        <span class="meter"><span style="width:${Math.min(100, r.v)}%"></span></span>
+        <span class="meter-row__val">${r.n ? pct(r.v, 1) : "—"}</span>
+        <span class="meter"><span style="width:${r.n ? Math.min(100, r.v) : 0}%"></span></span>
       </div>`).join("");
   }
 
   /* ---------- skill gaps ---------- */
   function renderGaps() {
     const gaps = DB.skillGapRows();
-    $("#gapTable tbody").innerHTML = gaps.map((g) => `
+    $("#gapTable tbody").innerHTML = !gaps.length
+      ? `<tr><td colspan="6" class="tbl-empty">No open jobs from verified companies match a published course yet.</td></tr>`
+      : gaps.map((g) => `
       <tr>
         <td><strong>${esc(g.course)}</strong></td>
         <td><div class="row row--tight">${g.industry.map((s) =>
@@ -290,13 +316,14 @@
       </tr>`).join("");
 
     $("#exportGaps").onclick = () => UI.exportCSV("skill-gaps.csv",
-      ["Course", "Industry requires", "Taught", "Gap", "Coverage %", "Demand index"],
+      ["Course", "Industry requires", "Taught", "Gap", "Coverage %", "Related open jobs"],
       gaps.map((g) => [g.course, g.industry.join(" | "), g.taught.join(" | "), g.gap.join(" | "), g.coverage.toFixed(0), g.demandIndex]));
   }
 
   /* ---------- non-placement reasons + actions ---------- */
   const ACTIONS = {
-    SKILL:    ["Add the missing modules to the curriculum", "Top 3 gap skills in this scope are pushed to the provider as a mandatory bridge module before the next batch."],
+    NOREPORT: ["Chase outcome reports", "These trainees have not reported their status yet. Remind them to update it on their profile — unreported outcomes leave the rates incomplete."],
+    SKILL:    ["Add the missing modules to the curriculum", "Push the top gap skills in this scope to the provider as a bridge module before the next batch."],
     EXP:      ["Expand apprenticeship and OJT slots", "Convert employer partners into 3-month on-the-job training hosts so first-job experience is built in."],
     INTV:     ["Mandatory interview-readiness sprint", "Two-week soft-skills and mock-interview block scheduled in the final month of the course."],
     NOJOB:    ["Open a mobility and remote-work track", "Fund relocation stipends to demand districts and prioritise remote-capable courses where local demand is thin."],
@@ -305,8 +332,13 @@
     RELEV:    ["Re-map the course to live demand", "Course is under-aligned with employer postings — trigger a curriculum review and consider retiring low-demand seats."]
   };
   function renderReasons() {
-    const data = DB.reasonBreakdown(rows);
-    const total = data.reduce((s, d) => s + d.value, 0) || 1;
+    const data = DB.reasonBreakdown(rows).filter((d) => d.value > 0);
+    const total = data.reduce((s, d) => s + d.value, 0);
+    if (!total) {
+      emptyChart("#chartReasons", "No trainees in this scope are without work");
+      $("#actionList").innerHTML = `<div class="empty"><div class="empty__title">Nothing to act on yet</div></div>`;
+      return;
+    }
     Viz.barH($("#chartReasons"), {
       items: data.map((d) => ({ label: d.label, value: d.value, pct: (d.value / total) * 100, color: "var(--series-2)" })),
       rowHeight: 32, labelWidth: 190, valueName: "Trainees", format: num,
@@ -350,11 +382,11 @@
     state.page = p.page;
 
     $("#registryCount").textContent =
-      `${num(list.length)} records in scope · showing ${p.slice.length} · click a row to open the trainee profile`;
+      `${num(list.length)} records in scope · showing ${p.slice.length}`;
 
     $("#registryTable tbody").innerHTML = p.slice.length ? p.slice.map((t) => {
       const f = latestWave(t);
-      return `<tr style="cursor:pointer" data-id="${t.id}">
+      return `<tr data-id="${t.id}">
         <td><div class="person">${avatar(t.name)}<div>
             <div class="person__name">${esc(t.name)}</div>
             <div class="person__meta">${t.age} · ${t.gender === "F" ? "Female" : t.gender === "M" ? "Male" : "Other"}</div>
@@ -364,9 +396,9 @@
         <td>${esc(t.provider)}</td>
         <td>${esc(t.district)}</td>
         <td class="tnum">${t.batch}</td>
-        <td class="num">${t.attendance}%</td>
-        <td class="num">${t.score}</td>
-        <td>${outcomeChip(t.outcome)}</td>
+        <td class="num">${t.attendance == null ? '<span class="muted">—</span>' : t.attendance + "%"}</td>
+        <td class="num">${t.score == null ? '<span class="muted">—</span>' : t.score}</td>
+        <td>${t.outcomeReported ? outcomeChip(t.outcome) : '<span class="chip"><i class="dot"></i>Not reported</span>'}</td>
         <td class="num">${t.currentSalary ? inr(t.currentSalary) : '<span class="muted">—</span>'}</td>
         <td>${FOLLOW_CHIP[f.status]} <span class="muted small">${f.wave}</span></td>
       </tr>`;
@@ -377,34 +409,29 @@
     if (prev) prev.onclick = () => { state.page--; renderRegistry(); };
     if (next) next.onclick = () => { state.page++; renderRegistry(); };
 
-    $("#registryTable tbody").onclick = (e) => {
-      const tr = e.target.closest("tr[data-id]");
-      if (tr) location.href = "trainee.html?id=" + encodeURIComponent(tr.dataset.id);
-    };
-
     $("#exportRegistry").onclick = () => UI.exportCSV("trainee-registry.csv",
       ["Unique ID", "Name", "Gender", "Age", "Course", "Provider", "District", "Batch",
        "Attendance %", "Score", "Outcome", "Starting salary", "Current salary", "Employer", "Retained 12m"],
       list.slice(0, 2000).map((t) => [t.id, t.name, t.gender, t.age, t.course, t.provider, t.district,
-        t.batch, t.attendance, t.score, UI.OUTCOME_META[t.outcome].label, t.startingSalary,
+        t.batch, t.attendance, t.score, t.outcomeReported ? UI.OUTCOME_META[t.outcome].label : "Not reported", t.startingSalary,
         t.currentSalary, t.employer || "", t.retained12m == null ? "n/a" : t.retained12m ? "Yes" : "No"]));
   }
 
   /* ---------- KPI export ---------- */
   $("#exportKpi").addEventListener("click", () => {
+    const v = (x) => (x == null ? "" : Number(x).toFixed(1));
     UI.exportCSV("outcome-summary.csv",
       ["Metric", "Value", "Scope"],
       [
         ["Total trainees", sum.total, scopeLabel()],
-        ["Employment rate %", sum.employmentRate.toFixed(1), scopeLabel()],
-        ["Self-employed %", sum.selfRate.toFixed(1), scopeLabel()],
-        ["Apprenticeship %", sum.apprenticeRate.toFixed(1), scopeLabel()],
-        ["Not placed %", sum.notPlacedRate.toFixed(1), scopeLabel()],
-        ["Avg starting salary", Math.round(sum.avgStartingSalary), scopeLabel()],
-        ["12-month retention %", sum.retention12m.toFixed(1), scopeLabel()],
-        ["Training relevance %", sum.relevance.toFixed(1), scopeLabel()],
-        ["Follow-up response %", sum.responseRate.toFixed(1), scopeLabel()],
-        ["Certification rate %", sum.certification.toFixed(1), scopeLabel()]
+        ["Reported an outcome", sum.reported, scopeLabel()],
+        ["Employment rate %", v(sum.employmentRate), scopeLabel()],
+        ["Self-employed %", v(sum.selfRate), scopeLabel()],
+        ["Apprenticeship %", v(sum.apprenticeRate), scopeLabel()],
+        ["Not placed %", v(sum.notPlacedRate), scopeLabel()],
+        ["Avg monthly income", sum.avgStartingSalary == null ? "" : Math.round(sum.avgStartingSalary), scopeLabel()],
+        ["Employer-verified placements", sum.verifiedPlacements, scopeLabel()],
+        ["Training relevance %", v(sum.relevance), scopeLabel()]
       ]);
   });
   function scopeLabel() {
@@ -415,7 +442,7 @@
   /* ---------- master render ---------- */
   function render() {
     rows = scopeRows();
-    sum = DB.summarise(rows);
+    sum = kpis(rows);
     renderKPIs();
     renderMix();
     renderDonut();
@@ -429,6 +456,7 @@
     renderRegistry();
   }
 
+  baseline = kpis(DB.trainees);
   render();
   if (location.hash) {
     setTimeout(() => {

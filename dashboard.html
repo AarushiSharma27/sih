@@ -19,13 +19,12 @@
       <div class="page-head">
         <div class="page-head__text">
           <h1>Outcome dashboard</h1>
-          <p>Real-time longitudinal outcomes across every cohort, course, provider and district.
+          <p>Outcomes of registered trainees, from their own status updates and employer-confirmed hires.
              All figures recompute from the filtered record set.</p>
         </div>
         <div class="page-head__actions">
           <button class="btn" id="exportKpi">⭳ Download report (CSV)</button>
           <button class="btn" onclick="window.print()">⎙ Print / PDF</button>
-          <button class="btn btn--primary" data-demo="Report scheduled — emailed every Monday 09:00 IST.">◷ Schedule report</button>
         </div>
       </div>
 
@@ -137,20 +136,20 @@
       <section class="card mt-16" id="gaps">
         <div class="card__head">
           <div><h3>Skill gaps — industry requirement vs what was taught</h3>
-            <div class="card__sub">Sourced from employer skill submissions and job postings on the platform</div></div>
+            <div class="card__sub">Industry requirement = skills in open job descriptions from verified companies · taught = the course's published qualification pack</div></div>
           <button class="btn btn--sm" id="exportGaps">⭳ CSV</button>
         </div>
         <div class="table-wrap">
           <table class="tbl" id="gapTable">
             <thead><tr>
               <th>Course</th><th>Industry requires</th><th>Currently taught</th>
-              <th>Gap</th><th class="num">Curriculum coverage</th><th class="num">Demand index</th>
+              <th>Gap</th><th class="num">Curriculum coverage</th><th class="num">Related open jobs</th>
             </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="card__foot">
-          <span>Coverage below 70% triggers a curriculum review request to the provider.</span>
+          <span>Coverage below 70% means the course misses most of what related jobs ask for.</span>
         </div>
       </section>
 
@@ -158,12 +157,12 @@
       <section class="grid grid--2 mt-16" id="reasons">
         <div class="card">
           <div class="card__head"><div><h3>Why trainees are not placed</h3>
-            <div class="card__sub">Self-reported at follow-up, filtered scope</div></div></div>
+            <div class="card__sub">Self-reported by trainees, including those who have not reported yet</div></div></div>
           <div class="card__body"><div class="js-chart" id="chartReasons"></div></div>
         </div>
         <div class="card">
           <div class="card__head"><div><h3>Recommended remedial actions</h3>
-            <div class="card__sub">Generated from the dominant reasons in this scope</div></div></div>
+            <div class="card__sub">Suggested from the dominant reasons in this scope</div></div></div>
           <div class="card__body"><div id="actionList" class="stack"></div></div>
         </div>
       </section>

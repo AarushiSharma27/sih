@@ -21,6 +21,24 @@
 
   const pct1 = (v) => pct(v, 1);
 
+  /* Group summary where rates use only trainees who reported an outcome, and metrics
+     that are not collected yet (12-month retention, wage growth) come out as null → "—". */
+  function stats(list) {
+    const rep = list.filter((t) => t.outcomeReported);
+    const s = DB.summarise(list), r = DB.summarise(rep);
+    const has = rep.length > 0, rel = rep.filter((t) => t.relevance > 0);
+    return Object.assign({}, s, {
+      counts: r.counts,
+      placementRate: has ? r.placementRate : null, employmentRate: has ? r.employmentRate : null,
+      selfRate: has ? r.selfRate : null,
+      avgStartingSalary: r.avgStartingSalary || null,
+      retention12m: rep.some((t) => t.retained12m != null) ? r.retention12m : null,
+      avgWageGrowth: null,
+      relevance: rel.length ? (rel.reduce((a, t) => a + t.relevance, 0) / rel.length / 5) * 100 : null
+    });
+  }
+  const breakdown = (rows, key) => DB.breakdown(rows, key).map((g) => Object.assign({ key: g.key, rows: g.rows }, stats(g.rows)));
+
   /* ======================================================================
      Report definitions
      ====================================================================== */
@@ -37,7 +55,7 @@
         { key: "retention12m",      label: "12m retention", fmt: pct1, align: "right" },
         { key: "relevance",         label: "Relevance",     fmt: pct1, align: "right" }
       ],
-      rows: (rows) => DB.breakdown(rows, "course")
+      rows: (rows) => breakdown(rows, "course")
     },
 
     provider: {
@@ -52,7 +70,8 @@
         { key: "certification",     label: "Certified",     fmt: pct1, align: "right" },
         { key: "responseRate",      label: "Follow-up resp.", fmt: pct1, align: "right" }
       ],
-      rows: (rows) => DB.breakdown(rows, "provider")
+      rows: (rows) => (DB.PROVIDERS.length ? breakdown(rows, "provider") : []),
+      emptyMsg: "Training provider is not recorded at registration yet, so there is nothing to compare."
     },
 
     district: {
@@ -67,7 +86,7 @@
         { key: "retention12m",   label: "12m retention", fmt: pct1, align: "right" },
         { key: "consentRate",    label: "Consent",       fmt: pct1, align: "right" }
       ],
-      rows: (rows) => DB.breakdown(rows, "district")
+      rows: (rows) => breakdown(rows, "district")
     },
 
     cohort: {
@@ -82,7 +101,7 @@
         { key: "retention12m",   label: "12m retention", fmt: pct1, align: "right" },
         { key: "responseRate",   label: "Follow-up resp.", fmt: pct1, align: "right" }
       ],
-      rows: (rows) => DB.breakdown(rows, "batch").slice().sort((a, b) => String(a.key).localeCompare(String(b.key)))
+      rows: (rows) => breakdown(rows, "batch").slice().sort((a, b) => String(a.key).localeCompare(String(b.key)))
     },
 
     employment: {
@@ -97,7 +116,7 @@
         { key: "notplaced",  label: "Not placed", fmt: num, align: "right" },
         { key: "placementRate", label: "Placed", fmt: pct1, align: "right" }
       ],
-      rows: (rows) => DB.breakdown(rows, "sector").map((r) => Object.assign({}, r, r.counts))
+      rows: (rows) => breakdown(rows, "sector").map((r) => Object.assign({}, r, r.counts))
     },
 
     skillgap: {
@@ -106,7 +125,7 @@
       columns: [
         { key: "course",      label: "Course",   fmt: esc },
         { key: "coverage",    label: "Coverage", fmt: pct1, align: "right" },
-        { key: "demandIndex", label: "Demand",   fmt: (v) => String(v), align: "right" },
+        { key: "demandIndex", label: "Related open jobs", fmt: (v) => String(v), align: "right" },
         { key: "taughtList",  label: "Taught",   fmt: esc },
         { key: "gapList",     label: "Missing",  fmt: esc }
       ],
@@ -115,7 +134,8 @@
         taughtList: g.taught.join(", "),
         gapList: g.gap.join(", ") || "—"
       })),
-      ignoresFilters: true
+      ignoresFilters: true,
+      emptyMsg: "No open jobs from verified companies match a published course yet."
     },
 
     retention: {
@@ -129,17 +149,11 @@
         { key: "avgStartingSalary", label: "Avg. start",    fmt: inr,  align: "right" },
         { key: "avgWageGrowth",     label: "Wage growth",   fmt: inr,  align: "right" }
       ],
-      rows: (rows) => DB.breakdown(rows, "course")
+      rows: (rows) => breakdown(rows, "course")
         .slice().sort((a, b) => a.retention12m - b.retention12m)
     }
   };
 
-  const SCHEDULED = [
-    { name: "Monthly programme summary", cadence: "1st of each month", to: "Mission director", next: "01 Oct 2026" },
-    { name: "Provider accountability pack", cadence: "Quarterly", to: "Accreditation committee", next: "01 Jan 2027" },
-    { name: "District outcome brief", cadence: "Fortnightly", to: "District co-ordinators", next: "01 Oct 2026" },
-    { name: "Skill-gap digest", cadence: "Quarterly", to: "Curriculum board", next: "01 Jan 2027" }
-  ];
 
   /* ======================================================================
      State
@@ -169,17 +183,8 @@
   fill("#fProvider", DB.PROVIDERS.map((p) => p.name));
   fill("#fBatch", DB.BATCHES.map((b) => b.id));
 
-  $("#scheduledList").innerHTML = SCHEDULED.map((s) => `
-    <div class="list-row">
-      <div class="list-row__main">
-        <div class="list-row__title">${esc(s.name)}</div>
-        <div class="list-row__sub">${esc(s.cadence)} · to ${esc(s.to)}</div>
-      </div>
-      <div class="text-right">
-        <div class="small muted">Next</div>
-        <div class="small tnum">${esc(s.next)}</div>
-      </div>
-    </div>`).join("");
+  $("#scheduledList").innerHTML = `<div class="empty"><div class="empty__title">No scheduled reports</div>
+    <div class="empty__body">Automatic report delivery is not set up yet. Generate a report and export it instead.</div></div>`;
 
   /* ---------- filters ---------- */
   function filters() {
@@ -293,6 +298,15 @@
      ====================================================================== */
   function renderReport(r) {
     const { def, rows } = r;
+    if (!rows.length) {
+      $("#reportTitle").textContent = def.title;
+      $("#reportMeta").textContent = "No data yet";
+      $("#exportActions").hidden = true;
+      $("#reportBody").innerHTML = `<div class="empty"><div class="empty__ico">⌕</div>
+        <div class="empty__title">Nothing to report yet</div>
+        <div class="empty__body">${esc(def.emptyMsg || "No records in this scope yet.")}</div></div>`;
+      return;
+    }
 
     $("#reportTitle").textContent = def.title;
     $("#reportMeta").textContent =
@@ -335,12 +349,13 @@
       </div>`;
     }
 
-    const s = DB.summarise(DB.filterTrainees(r.filters));
+    const s = stats(DB.filterTrainees(r.filters));
+    const dash = (v, f) => (v == null ? "—" : f(v));
     const tiles = [
       { label: "Trainees", value: num(s.total), accent: "var(--series-7)" },
-      { label: "Placed", value: pct(s.placementRate, 1), accent: "var(--series-1)" },
-      { label: "Avg. starting salary", value: inr(s.avgStartingSalary), accent: "var(--series-3)" },
-      { label: "12-month retention", value: pct(s.retention12m, 1), accent: "var(--series-4)" }
+      { label: "Placed", value: dash(s.placementRate, pct1), accent: "var(--series-1)" },
+      { label: "Avg. monthly income", value: dash(s.avgStartingSalary, inr), accent: "var(--series-3)" },
+      { label: "12-month retention", value: dash(s.retention12m, pct1), accent: "var(--series-4)" }
     ];
     return `<div class="card__body" style="padding-bottom:0">
       <div class="grid grid--4">

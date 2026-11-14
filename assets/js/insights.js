@@ -45,7 +45,8 @@
       const worst = DB.skillGapRows()[0];
       if (!worst || !worst.gap.length) return null;
       const rows = DB.filterTrainees(Object.assign({}, state.filters, { course: worst.course }));
-      const s = DB.summarise(rows);
+      const rep = rows.filter((t) => t.outcomeReported);
+      const s = DB.summarise(rep);
       return {
         id: "skill-gap",
         priority: worst.coverage < 55 ? "critical" : "serious",
@@ -53,12 +54,12 @@
         insight: `${worst.gap.join(", ")} ${worst.gap.length === 1 ? "is" : "are"} frequently requested by `
           + `employers but ${worst.gap.length === 1 ? "is" : "are"} not covered in ${worst.course}.`,
         action: `Add ${worst.gap.slice(0, 2).join(" and ")} module${worst.gap.length > 1 ? "s" : ""} to the `
-          + `${worst.course} curriculum. Employer demand for this course scores ${worst.demandIndex}/100.`,
+          + `${worst.course} curriculum. ${worst.demandIndex} open job${worst.demandIndex === 1 ? "" : "s"} from verified companies relate to this course.`,
         evidence: [
           ["Curriculum coverage", pct(worst.coverage, 0)],
           ["Taught", worst.taught.length + " of " + worst.industry.length + " skills"],
           ["Trainees affected", num(rows.length)],
-          ["Placement rate", pct(s.placementRate, 1)]
+          ["Placement rate", rep.length ? pct(s.placementRate, 1) : "— (none reported)"]
         ],
         chart: {
           items: [
@@ -72,7 +73,9 @@
 
     /* --- early attrition: retention against the programme average --- */
     function retention() {
-      const rows = DB.filterTrainees(state.filters);
+      // retention needs a 12-month status check, which is not collected yet; skip rather than read zeros as attrition
+      const rows = DB.filterTrainees(state.filters).filter((t) => t.retained12m != null);
+      if (!rows.length) return null;
       const overall = DB.summarise(rows);
       const byCourse = DB.breakdown(rows, "course").filter((c) => c.total >= 150);
       if (!byCourse.length) return null;
@@ -109,7 +112,8 @@
     /* --- non-placement reasons --- */
     function nonPlacement() {
       const rows = DB.filterTrainees(state.filters);
-      const reasons = DB.reasonBreakdown(rows).filter((r) => r.value > 0);
+      // "not reported yet" is missing data, not a reason for being unplaced
+      const reasons = DB.reasonBreakdown(rows).filter((r) => r.value > 0 && r.code !== "NOREPORT");
       if (!reasons.length) return null;
       const top = reasons[0];
       const totalUnplaced = reasons.reduce((s, r) => s + r.value, 0);
@@ -188,7 +192,7 @@
     /* --- equity: the gender gap --- */
     function equity() {
       const rows = DB.filterTrainees(state.filters);
-      const byGender = DB.breakdown(rows, "gender").filter((g) => g.total >= 100);
+      const byGender = DB.breakdown(rows.filter((t) => t.outcomeReported), "gender").filter((g) => g.total >= 100);
       const f = byGender.find((g) => g.key === "F");
       const m = byGender.find((g) => g.key === "M");
       if (!f || !m) return null;
@@ -258,13 +262,14 @@
 
     /* --- cost efficiency --- */
     function roi() {
-      const rows = DB.filterTrainees(state.filters);
+      if (!DB.COURSES.some((c) => c.fee)) return null;   // course fees are not collected yet
+      const rows = DB.filterTrainees(state.filters).filter((t) => t.outcomeReported);
       const byCourse = DB.breakdown(rows, "course").filter((c) => c.total >= 150);
       if (!byCourse.length) return null;
 
       const withCost = byCourse.map((c) => {
         const course = DB.COURSES.find((x) => x.name === c.key);
-        if (!course) return null;
+        if (!course || !course.fee) return null;
         const placed = c.total - c.counts.notplaced;
         // The unplaced cost money too — a cost-per-placement that ignores them
         // flatters exactly the courses that need scrutiny.
@@ -325,14 +330,16 @@
 
   function renderStats() {
     const rows = DB.filterTrainees(state.filters);
-    const s = DB.summarise(rows);
+    const rep = rows.filter((t) => t.outcomeReported);
+    const s = DB.summarise(rep);
     const critical = state.findings.filter((f) => f.priority === "critical").length;
 
     const tiles = [
       { label: "Findings", value: state.findings.length, meta: "from the current scope", accent: "var(--series-7)" },
       { label: "Critical", value: critical, meta: critical ? "act this cycle" : "none outstanding", accent: critical ? "var(--critical)" : "var(--good)" },
       { label: "Trainees in scope", value: num(rows.length), meta: "records behind these findings", accent: "var(--series-1)" },
-      { label: "Placement rate", value: pct(s.placementRate, 1), meta: "the number these actions move", accent: "var(--series-3)" }
+      { label: "Placement rate", value: rep.length ? pct(s.placementRate, 1) : "—",
+        meta: `of ${num(rep.length)} who reported an outcome`, accent: "var(--series-3)" }
     ];
 
     $("#insightStats").innerHTML = tiles.map((t) => `
@@ -353,10 +360,11 @@
       $("#insightList").innerHTML = `
         <div class="card"><div class="empty">
           <div class="empty__ico">✓</div>
-          <div class="empty__title">Nothing flagged at this priority</div>
+          <div class="empty__title">${state.findings.length ? "Nothing flagged at this priority" : "No findings yet"}</div>
           <div class="empty__body">
-            No finding in the current scope meets that threshold. Widen the priority filter,
-            or broaden the district and cohort selection.
+            ${state.findings.length
+              ? "No finding in the current scope meets that threshold. Widen the priority filter, or broaden the district and cohort selection."
+              : "Findings appear once enough trainees have reported outcomes and verified companies have posted jobs. Each one is computed from those records."}
           </div>
         </div></div>`;
       return;
@@ -396,9 +404,6 @@
           </div>
           <div class="card__foot">
             <span class="small muted">Computed from ${num(DB.filterTrainees(state.filters).length)} records in scope</span>
-            <span class="topbar__spacer"></span>
-            <button class="btn btn--sm" data-demo="Action assigned — it will appear in the programme improvement plan.">Assign owner</button>
-            <button class="btn btn--sm" data-demo="Finding dismissed. It will reappear if the evidence strengthens.">Dismiss</button>
           </div>
         </div>`;
     }).join("");
